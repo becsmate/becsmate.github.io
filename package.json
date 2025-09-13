@@ -5,7 +5,7 @@
   "scripts": {
     "build": "cd client && npm install && npm run build",
     "clean": "rm -rf client/build client/node_modules",
-    "heroku-postbuild": "npm run build"
+    "heroku-postbuild": "cd client && npm install && npm run build"
   },
   "cacheDirectories": [
     "client/node_modules"
