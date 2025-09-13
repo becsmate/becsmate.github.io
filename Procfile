@@ -1,1 +1,1 @@
-web: nginx -p $PWD -c config/nginx.conf.erb
+web: bin/start-nginx config/nginx.conf.erb
