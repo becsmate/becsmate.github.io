@@ -1,22 +1,17 @@
 {
-  "name": "becsmate.github.io",
+  "name": "my-flask-react-app",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Flask backend with React TypeScript frontend",
   "scripts": {
     "build": "cd client && npm install && npm run build",
-    "heroku-postbuild": "npm run build",
     "clean": "rm -rf client/build client/node_modules",
+    "heroku-postbuild": "npm run build"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/becsmate/becsmate.github.io.git"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/becsmate/becsmate.github.io/issues"
-  },
-  "homepage": "https://github.com/becsmate/becsmate.github.io#readme"
+  "cacheDirectories": [
+    "client/node_modules"
+  ],
+  "engines": {
+    "node": "18.x",
+    "npm": "10.x"
+  }
 }
