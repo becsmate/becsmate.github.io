@@ -20,6 +20,8 @@ import ProjectsPage from './pages/ProjectsPage';
 import ContactPage from './pages/ContactPage';
 import LoginPage from './pages/LoginPage';
 
+import { AuthProvider } from './contexts/AuthContext';
+
 function App() {
   const [darkMode, setDarkMode] = useState(false);
   
@@ -48,35 +50,37 @@ function App() {
   };
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Router>
-        <Navigation darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
-        
-        <Routes>
-          <Route 
-            path="/" 
-            element={<HomePage aboutData={aboutData} error={error} />} 
-          />
-          <Route 
-            path="/about" 
-            element={<AboutPage aboutData={aboutData} />} 
-          />
-          <Route 
-            path="/projects" 
-            element={<ProjectsPage />} 
-          />
-          <Route 
-            path="/contact" 
-            element={<ContactPage />} 
-          />
-          <Route 
-            path="/login" 
-            element={<LoginPage />} 
-          />
-        </Routes>
-      </Router>
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Router>
+          <Navigation darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+          
+          <Routes>
+            <Route 
+              path="/" 
+              element={<HomePage aboutData={aboutData} error={error} />} 
+            />
+            <Route 
+              path="/about" 
+              element={<AboutPage aboutData={aboutData} />} 
+            />
+            <Route 
+              path="/projects" 
+              element={<ProjectsPage />} 
+            />
+            <Route 
+              path="/contact" 
+              element={<ContactPage />} 
+            />
+              <Route 
+                path="/login" 
+                element={<LoginPage />} 
+              />
+          </Routes>
+        </Router>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }
 

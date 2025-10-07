@@ -1,19 +1,14 @@
 import React from 'react';
 import { Container, Typography, Box } from '@mui/material';
 import LoginForm from '../components/auth/LoginForm';
+import RegisterForm from '../components/auth/RegisterForm';
 
 const LoginPage: React.FC = () => {
+
+  const [register, setRegister] = React.useState(false);
+
   return (
     <Container maxWidth="sm" sx={{ mt: 8 }}>
-      <Box
-        sx={{
-          backgroundColor: 'primary.main',
-          height: 4,
-          mb: 4,
-          borderRadius: 2,
-        }}
-      >
-      </Box>
       <Box 
         sx={{ 
           display: 'flex', 
@@ -22,12 +17,21 @@ const LoginPage: React.FC = () => {
           gap: 2 
         }}
       >
-        <Typography variant="h3" component="h1" gutterBottom>
-          Login
+        {register ? 
+          <RegisterForm onSuccess={() => {
+            window.location.href = '/';
+          }} /> : 
+          <LoginForm onSuccess={() => {
+            window.location.href = '/';
+          }} />
+        }
+        <Typography
+          variant="body2"
+          sx={{ cursor: 'pointer', color: 'primary.main' }}
+          onClick={() => setRegister(!register)}
+        >
+          {register ? 'Already have an account? Login' : "Don't have an account? Register"}
         </Typography>
-        <LoginForm onSuccess={() => {
-          window.location.href = '/';
-        }} />
       </Box>
     </Container>
   );
