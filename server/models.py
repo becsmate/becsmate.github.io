@@ -1,7 +1,7 @@
 """Database models for the application."""
 from datetime import datetime
 from uuid import uuid4
-from passlib.hash import bcrypt
+import bcrypt
 from .extensions import db
 
 
@@ -23,10 +23,16 @@ class User(TimestampMixin, db.Model):
     wallets = db.relationship("Wallet", back_populates="owner", cascade="all,delete", lazy="dynamic")
 
     def set_password(self, password: str):
-        self.password_hash = bcrypt.hash(password)
+        # Truncate password to 72 bytes to avoid bcrypt length limit
+        # This is safe as bcrypt only uses the first 72 bytes anyway
+        password_bytes = password.encode('utf-8')[:72]
+        salt = bcrypt.gensalt()
+        self.password_hash = bcrypt.hashpw(password_bytes, salt).decode('utf-8')
 
     def check_password(self, password: str) -> bool:
-        return bcrypt.verify(password, self.password_hash)
+        # Truncate password to 72 bytes for consistency
+        password_bytes = password.encode('utf-8')[:72]
+        return bcrypt.checkpw(password_bytes, self.password_hash.encode('utf-8'))
 
 class Wallet(TimestampMixin, db.Model):
     __tablename__ = "wallets"

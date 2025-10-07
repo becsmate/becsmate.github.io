@@ -8,7 +8,6 @@ import {
   Box,
   useMediaQuery,
   useTheme,
-  // Dialog,
 } from '@mui/material';
 import {
   Brightness4,
@@ -16,6 +15,7 @@ import {
   Menu as MenuIcon,
 } from '@mui/icons-material';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuthContext } from '../contexts/AuthContext';
 
 interface NavigationProps {
   darkMode: boolean;
@@ -23,6 +23,8 @@ interface NavigationProps {
 }
 
 const Navigation: React.FC<NavigationProps> = ({ darkMode, toggleDarkMode }) => {
+
+  const { isAuthenticated, logout } = useAuthContext();
 
   const location = useLocation();
   const theme = useTheme();
@@ -33,7 +35,6 @@ const Navigation: React.FC<NavigationProps> = ({ darkMode, toggleDarkMode }) => 
     { label: 'About', path: '/about' },
     { label: 'Projects', path: '/projects' },
     { label: 'Contact', path: '/contact' },
-    { label: 'Login', path: '/login' },
   ];
 
   const isActive = (path: string) => {
@@ -85,6 +86,28 @@ const Navigation: React.FC<NavigationProps> = ({ darkMode, toggleDarkMode }) => 
         <IconButton color="inherit" onClick={toggleDarkMode}>
           {darkMode ? <Brightness7 /> : <Brightness4 />}
         </IconButton>
+        {isAuthenticated ? (
+            <Button 
+            onClick={() => {
+              logout();
+            }} 
+            color="inherit" 
+            variant="outlined" 
+            sx={{ ml: 2 }}
+            >
+            Logout
+            </Button>
+        ) : (
+          <Button 
+            component={Link} 
+            to="/login" 
+            color="inherit" 
+            variant="outlined" 
+            sx={{ ml: 2 }}
+          >
+            Login
+          </Button>
+        )}
       </Toolbar>
     </AppBar>
   );

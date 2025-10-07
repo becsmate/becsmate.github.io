@@ -1,33 +1,34 @@
-import { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useEffect, useState } from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import {
   ThemeProvider,
   createTheme,
   CssBaseline,
   useMediaQuery,
-} from '@mui/material';
+} from "@mui/material";
 
 // Hooks
-import { useAboutData } from './hooks/useApi';
+import { useAboutData } from "./hooks/useApi";
+import { useAuthContext } from "./contexts/AuthContext";
 
 // Components
-import Navigation from './components/Navigation';
+import Navigation from "./components/Navigation";
 
 // Pages
-import HomePage from './pages/HomePage';
-import AboutPage from './pages/AboutPage';
-import ProjectsPage from './pages/ProjectsPage';
-import ContactPage from './pages/ContactPage';
-import LoginPage from './pages/LoginPage';
-
-import { AuthProvider } from './contexts/AuthContext';
+import HomePage from "./pages/HomePage";
+import AboutPage from "./pages/AboutPage";
+import ProjectsPage from "./pages/ProjectsPage";
+import ContactPage from "./pages/ContactPage";
+import LoginPage from "./pages/LoginPage";
 
 function App() {
+  const { isAuthenticated } = useAuthContext();
+
   const [darkMode, setDarkMode] = useState(false);
-  
+
   const { data: aboutData, error } = useAboutData();
 
-  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
+  const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
 
   useEffect(() => {
     setDarkMode(prefersDarkMode);
@@ -35,12 +36,12 @@ function App() {
 
   const theme = createTheme({
     palette: {
-      mode: darkMode ? 'dark' : 'light',
+      mode: darkMode ? "dark" : "light",
       primary: {
-        main: '#1976d2',
+        main: "#1976d2",
       },
       secondary: {
-        main: '#dc004e',
+        main: "#dc004e",
       },
     },
   });
@@ -50,37 +51,23 @@ function App() {
   };
 
   return (
-    <AuthProvider>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Router>
-          <Navigation darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
-          
-          <Routes>
-            <Route 
-              path="/" 
-              element={<HomePage aboutData={aboutData} error={error} />} 
-            />
-            <Route 
-              path="/about" 
-              element={<AboutPage aboutData={aboutData} />} 
-            />
-            <Route 
-              path="/projects" 
-              element={<ProjectsPage />} 
-            />
-            <Route 
-              path="/contact" 
-              element={<ContactPage />} 
-            />
-              <Route 
-                path="/login" 
-                element={<LoginPage />} 
-              />
-          </Routes>
-        </Router>
-      </ThemeProvider>
-    </AuthProvider>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Navigation darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
+
+        <Routes>
+          <Route
+            path="/"
+            element={<HomePage aboutData={aboutData} error={error} />}
+          />
+          <Route path="/about" element={<AboutPage aboutData={aboutData} />} />
+          <Route path="/projects" element={<ProjectsPage />} />
+          <Route path="/contact" element={<ContactPage />} />
+          {!isAuthenticated && <Route path="/login" element={<LoginPage />} />}
+        </Routes>
+      </Router>
+    </ThemeProvider>
   );
 }
 

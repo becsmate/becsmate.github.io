@@ -10,7 +10,7 @@ cd "$PROJECT_ROOT"
 # Set environment variables
 export FLASK_ENV=development
 export FLASK_DEBUG=1
-export DATABASE_URL=sqlite:///instance/dev.db
+export DATABASE_URL="sqlite:///$PROJECT_ROOT/instance/dev.db"
 export JWT_SECRET_KEY=dev-secret-key
 export CORS_ORIGINS=http://localhost:3000
 

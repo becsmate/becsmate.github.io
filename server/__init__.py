@@ -39,4 +39,8 @@ def create_app(config_class=Config):
     from .routes.spa import register_spa_routes
     register_spa_routes(app)
     
+    # Create database tables if they don't exist
+    with app.app_context():
+        db.create_all()
+    
     return app

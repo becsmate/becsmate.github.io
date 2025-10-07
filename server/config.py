@@ -13,8 +13,11 @@ class Config:
     """Base configuration."""
     
     # Database
+    # Use absolute path for SQLite database
+    _base_dir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+    _default_db_path = os.path.join(_base_dir, "instance", "dev.db")
     SQLALCHEMY_DATABASE_URI = normalize_db_url(
-        os.getenv("DATABASE_URL", "sqlite:///dev.db")
+        os.getenv("DATABASE_URL", f"sqlite:///{_default_db_path}")
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
