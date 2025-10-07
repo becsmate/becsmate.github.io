@@ -1,66 +1,8 @@
-from flask import Flask, send_from_directory, jsonify, request
-from flask_cors import CORS
+"""Main application entry point for WSGI server."""
 import os
-from pathlib import Path
+from . import create_app
 
-def create_app():
-    app = Flask(__name__, static_folder='../client/build', static_url_path='')
-    
-    # Configure CORS
-    cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,https://becsmate.me,https://www.becsmate.me").split(",")
-    CORS(app, origins=cors_origins)
-    
-    # API Routes only - no frontend routing
-    @app.route('/api/health')
-    def health_check():
-        return jsonify({
-            'status': 'healthy',
-            'message': 'Flask backend is running!',
-            'version': '1.0.0',
-            'port': os.getenv('PORT', '5000')
-        })
-    
-    @app.route('/api/about')
-    def about():
-        return jsonify({
-            'name': 'becsmate.me',
-            'description': 'Personal website of Becs',
-            'tech_stack': ['Python', 'Flask', 'React', 'TypeScript', 'Material-UI', 'Docker']
-        })
-    
-    # Serve React app for root
-    @app.route('/')
-    def serve_react_root():
-        return send_from_directory(app.static_folder, 'index.html')
-    
-    # Serve static files and handle client-side routing
-    @app.route('/<path:filename>')
-    def serve_static(filename):
-        static_folder = Path(app.static_folder)
-        file_path = static_folder / filename
-        
-        # If it's a static file that exists, serve it
-        if file_path.exists() and file_path.is_file():
-            return send_from_directory(app.static_folder, filename)
-        
-        # If file doesn't exist and it's not an API call, serve React app for client routing
-        if not filename.startswith('api/'):
-            return send_from_directory(app.static_folder, 'index.html')
-        
-        # If it's an API call that doesn't exist, return 404
-        return jsonify({'error': 'API endpoint not found'}), 404
-    
-    # Error handler
-    @app.errorhandler(404)
-    def not_found(error):
-        # For API routes, return JSON error
-        if request.path.startswith('/api/'):
-            return jsonify({'error': 'API endpoint not found'}), 404
-        # For everything else, let React handle it
-        return send_from_directory(app.static_folder, 'index.html')
-    
-    return app
-
+# Create the Flask application instance
 app = create_app()
 
 if __name__ == '__main__':
