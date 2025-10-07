@@ -22,14 +22,16 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend source
+# Copy backend files
 COPY server/ ./server/
 
-# Copy built frontend from previous stage
+# Copy built frontend
 COPY --from=frontend-build /app/client/build ./client/build
 
-# Create non-root user
-RUN useradd --create-home --shell /bin/bash app
+# Create user and set permissions
+RUN useradd --create-home --shell /bin/bash app && \
+    mkdir -p /app/instance && \
+    chown -R app:app /app
 USER app
 
 # Expose port (Heroku will override with $PORT)
