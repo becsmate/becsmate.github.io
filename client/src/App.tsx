@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import {
   ThemeProvider,
@@ -18,11 +18,11 @@ import HomePage from './pages/HomePage';
 import AboutPage from './pages/AboutPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ContactPage from './pages/ContactPage';
+import LoginPage from './pages/LoginPage';
 
 function App() {
   const [darkMode, setDarkMode] = useState(false);
   
-  // Use the custom hook for about data
   const { data: aboutData, error } = useAboutData();
 
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
@@ -69,6 +69,10 @@ function App() {
           <Route 
             path="/contact" 
             element={<ContactPage />} 
+          />
+          <Route 
+            path="/login" 
+            element={<LoginPage />} 
           />
         </Routes>
       </Router>

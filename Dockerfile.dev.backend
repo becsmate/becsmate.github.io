@@ -1,0 +1,28 @@
+# Backend development Dockerfile
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install development dependencies
+RUN pip install --no-cache-dir flask watchdog
+
+# Create instance directory
+RUN mkdir -p /app/instance
+
+# Copy server code (will be mounted as volume in dev)
+COPY server/ ./server/
+
+EXPOSE 5000
+
+# Start Flask with hot reload
+CMD ["flask", "--app", "server.app", "run", "--host=0.0.0.0", "--port=5000", "--debug", "--reload"]

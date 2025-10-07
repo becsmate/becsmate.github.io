@@ -94,3 +94,5 @@ export function LoginForm({ onSuccess }: LoginFormProps) {
     </Paper>
   );
 }
+
+export default LoginForm;

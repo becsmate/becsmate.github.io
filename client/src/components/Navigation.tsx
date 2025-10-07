@@ -8,6 +8,7 @@ import {
   Box,
   useMediaQuery,
   useTheme,
+  // Dialog,
 } from '@mui/material';
 import {
   Brightness4,
@@ -22,6 +23,7 @@ interface NavigationProps {
 }
 
 const Navigation: React.FC<NavigationProps> = ({ darkMode, toggleDarkMode }) => {
+
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -31,6 +33,7 @@ const Navigation: React.FC<NavigationProps> = ({ darkMode, toggleDarkMode }) => 
     { label: 'About', path: '/about' },
     { label: 'Projects', path: '/projects' },
     { label: 'Contact', path: '/contact' },
+    { label: 'Login', path: '/login' },
   ];
 
   const isActive = (path: string) => {

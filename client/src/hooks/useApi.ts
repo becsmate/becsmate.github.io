@@ -1,6 +1,3 @@
-/**
- * Custom hooks for API operations
- */
 import { useState, useEffect } from 'react';
 import { appApi, authApi, walletApi, ocrApi, type AboutData, type User, type Wallet, type Transaction, type OCRJob } from '../api';
 

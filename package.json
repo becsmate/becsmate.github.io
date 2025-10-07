@@ -6,11 +6,13 @@
     "build": "cd client && npm install && npm run build",
     "clean": "rm -rf client/build client/node_modules",
     "heroku-postbuild": "cd client && npm install && npm run build",
-    "dev": "docker-compose up",
-    "dev:frontend": "docker-compose --profile dev up frontend-dev",
-    "prod": "docker-compose --profile prod up app-prod",
+    "dev": "./scripts/dev.sh",
+    "dev:docker": "docker-compose -f docker-compose.dev.yml up",
+    "dev:frontend": "./scripts/dev-frontend.sh",
+    "dev:backend": "./scripts/dev-backend.sh",
+    "dev:init": "python scripts/init_db.py",
     "local:install": "cd client && npm install",
-    "local:dev": "concurrently \"cd server && python app.py\" \"cd client && npm start\""
+    "local:setup": "pip install -r requirements.txt && cd client && npm install"
   },
   "cacheDirectories": [
     "client/node_modules"
