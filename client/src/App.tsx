@@ -6,7 +6,9 @@ import {
   CssBaseline,
   useMediaQuery,
 } from '@mui/material';
-import axios from 'axios';
+
+// Hooks
+import { useAboutData } from './hooks/useApi';
 
 // Components
 import Navigation from './components/Navigation';
@@ -17,16 +19,11 @@ import AboutPage from './pages/AboutPage';
 import ProjectsPage from './pages/ProjectsPage';
 import ContactPage from './pages/ContactPage';
 
-interface AboutData {
-  name: string;
-  description: string;
-  tech_stack: string[];
-}
-
 function App() {
   const [darkMode, setDarkMode] = useState(false);
-  const [aboutData, setAboutData] = useState<AboutData | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  
+  // Use the custom hook for about data
+  const { data: aboutData, error } = useAboutData();
 
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
 
@@ -45,20 +42,6 @@ function App() {
       },
     },
   });
-
-  useEffect(() => {
-    const fetchAboutData = async () => {
-      try {
-        const response = await axios.get('/api/about');
-        setAboutData(response.data);
-      } catch (err) {
-        setError('Failed to load site information');
-        console.error('Error fetching about data:', err);
-      }
-    };
-
-    fetchAboutData();
-  }, []);
 
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
