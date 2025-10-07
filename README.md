@@ -101,18 +101,30 @@ The site uses Heroku's container stack with automatic deployments.
 
 1. **Set up Heroku app**:
    ```bash
-   heroku create becsmate-site
+   heroku create your-app-name
    heroku stack:set container
    heroku config:set FLASK_ENV=production
-   heroku config:set CORS_ORIGINS=https://becsmate.me
+   heroku config:set CORS_ORIGINS=https://becsmate.me,https://www.becsmate.me
    ```
 
-2. **Deploy**:
+2. **Test locally first**:
    ```bash
+   ./scripts/test-heroku.sh
+   ```
+
+3. **Deploy with script**:
+   ```bash
+   ./scripts/deploy.sh
+   ```
+
+4. **Or deploy manually**:
+   ```bash
+   git add .
+   git commit -m "Deploy to Heroku"
    git push heroku main
    ```
 
-3. **Custom domain** (already configured):
+5. **Custom domain** (already configured):
    ```bash
    heroku domains:add becsmate.me
    heroku domains:add www.becsmate.me

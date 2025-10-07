@@ -32,8 +32,8 @@ COPY --from=frontend-build /app/client/build ./client/build
 RUN useradd --create-home --shell /bin/bash app
 USER app
 
-# Expose port
+# Expose port (Heroku will override with $PORT)
 EXPOSE 5000
 
-# Command for production (Heroku will override this)
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "2", "--threads", "4", "--timeout", "60", "server.app:app"]
+# Use PORT environment variable for Heroku compatibility
+CMD gunicorn --bind 0.0.0.0:${PORT:-5000} --workers 2 --threads 4 --timeout 60 server.app:app
