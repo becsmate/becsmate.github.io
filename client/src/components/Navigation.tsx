@@ -8,6 +8,7 @@ import {
   Box,
   useMediaQuery,
   useTheme,
+  Menu,
 } from '@mui/material';
 import {
   Brightness4,
@@ -26,9 +27,45 @@ const Navigation: React.FC<NavigationProps> = ({ darkMode, toggleDarkMode }) => 
 
   const { isAuthenticated, logout } = useAuthContext();
 
+  const loginLogoutButton = () => {
+    return (
+      isAuthenticated ? (
+        <Button
+          onClick={() => {
+            logout();
+          }}
+          color="inherit"
+          variant="outlined"
+          sx={{ ml: 2 }}
+        >
+          Logout
+        </Button>
+      ) : (
+        <Button
+          component={Link}
+          to="/login"
+          color="inherit"
+          variant="outlined"
+          sx={{ ml: 2 }}
+        >
+          Login
+        </Button>
+      )
+    );
+  };
+
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
 
   const navItems = [
     { label: 'Home', path: '/' },
@@ -76,38 +113,62 @@ const Navigation: React.FC<NavigationProps> = ({ darkMode, toggleDarkMode }) => 
             ))}
           </Box>
         )}
-
         {isMobile && (
-          <IconButton color="inherit" sx={{ mr: 1 }}>
-            <MenuIcon />
-          </IconButton>
+          <>
+            <Button
+              id="nav-menu-button"
+              aria-controls={open ? "nav-menu-button" : undefined}
+              aria-haspopup="true"
+              aria-expanded={open ? 'true' : undefined}
+              variant="outlined"
+              color="inherit"
+              disableElevation
+              onClick={handleClick}
+              sx={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minWidth: '50px',
+                padding: 0.6,
+              }}
+            >
+              <MenuIcon />
+            </Button>
+            <Menu
+              open={open}
+              onClose={handleClose}
+              anchorEl={anchorEl}
+            >
+              <Box
+                sx={{
+                  width: 250,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 1,
+                  p: 2,
+                }}
+              >
+                {navItems.map((item) => (
+                  <Button
+                    key={item.path}
+                    component={Link}
+                    to={item.path}
+                    color="inherit"
+                    onClick={handleClose}
+                  >
+                    {item.label}
+                  </Button>
+                ))}
+                {loginLogoutButton()}
+              </Box>
+            </Menu>
+          </>
         )}
 
         <IconButton color="inherit" onClick={toggleDarkMode}>
           {darkMode ? <Brightness7 /> : <Brightness4 />}
         </IconButton>
-        {isAuthenticated ? (
-            <Button 
-            onClick={() => {
-              logout();
-            }} 
-            color="inherit" 
-            variant="outlined" 
-            sx={{ ml: 2 }}
-            >
-            Logout
-            </Button>
-        ) : (
-          <Button 
-            component={Link} 
-            to="/login" 
-            color="inherit" 
-            variant="outlined" 
-            sx={{ ml: 2 }}
-          >
-            Login
-          </Button>
-        )}
+        {!isMobile && loginLogoutButton()}
       </Toolbar>
     </AppBar>
   );
