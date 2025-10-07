@@ -1,11 +1,16 @@
 {
-  "name": "my-flask-react-app",
+  "name": "becsmate-personal-site",
   "version": "1.0.0",
-  "description": "Flask backend with React TypeScript frontend",
+  "description": "Personal website - Flask backend with React TypeScript frontend",
   "scripts": {
     "build": "cd client && npm install && npm run build",
     "clean": "rm -rf client/build client/node_modules",
-    "heroku-postbuild": "cd client && npm install && npm run build"
+    "heroku-postbuild": "cd client && npm install && npm run build",
+    "dev": "docker-compose up",
+    "dev:frontend": "docker-compose --profile dev up frontend-dev",
+    "prod": "docker-compose --profile prod up app-prod",
+    "local:install": "cd client && npm install",
+    "local:dev": "concurrently \"cd server && python app.py\" \"cd client && npm start\""
   },
   "cacheDirectories": [
     "client/node_modules"
@@ -13,5 +18,8 @@
   "engines": {
     "node": "18.x",
     "npm": "10.x"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
   }
 }

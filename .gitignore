@@ -1,0 +1,6 @@
+# node modules
+/node_modules/
+/client/node_modules/
+
+# pycache
+/server/__pycache__/
