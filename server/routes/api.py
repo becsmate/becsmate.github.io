@@ -2,8 +2,8 @@
 from flask import Blueprint, jsonify, request
 import os
 import uuid
-from ocr.ocr_service import OCRSpaceService
-from ocr.grok_parser import GroqAIParser
+from ..ocr.ocr_service import OCRSpaceService
+from ..ocr.grok_parser import GroqAIParser
 from werkzeug.utils import secure_filename
 from flask import current_app as app
 
