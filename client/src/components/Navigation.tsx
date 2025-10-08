@@ -72,6 +72,7 @@ const Navigation: React.FC<NavigationProps> = ({ darkMode, toggleDarkMode }) => 
     { label: 'About', path: '/about' },
     { label: 'Projects', path: '/projects' },
     { label: 'Contact', path: '/contact' },
+    { label: 'Upload', path: '/upload' },
   ];
 
   const isActive = (path: string) => {

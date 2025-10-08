@@ -1,10 +1,11 @@
 """Flask application factory."""
-from flask import Flask
+from fileinput import filename
+from flask import Flask, app
 from flask_cors import CORS
+import os
 
 from .config import Config
 from .extensions import db, migrate, jwt
-
 
 def create_app(config_class=Config):
     """Create and configure the Flask application."""
@@ -12,7 +13,14 @@ def create_app(config_class=Config):
     
     # Configuration
     app.config.from_object(config_class)
-    
+
+    app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+    app.config['UPLOAD_FOLDER'] = 'uploads'
+    app.config['ALLOWED_EXTENSIONS'] = {'png', 'jpg', 'jpeg', 'gif', 'pdf'}
+
+    # Ensure upload directory exists
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+        
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)

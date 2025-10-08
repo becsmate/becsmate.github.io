@@ -20,6 +20,7 @@ import AboutPage from "./pages/AboutPage";
 import ProjectsPage from "./pages/ProjectsPage";
 import ContactPage from "./pages/ContactPage";
 import LoginPage from "./pages/LoginPage";
+import UploadPage from "./pages/UploadPage";
 
 function App() {
   const { isAuthenticated } = useAuthContext();
@@ -64,6 +65,7 @@ function App() {
           <Route path="/about" element={<AboutPage aboutData={aboutData} />} />
           <Route path="/projects" element={<ProjectsPage />} />
           <Route path="/contact" element={<ContactPage />} />
+          <Route path="/upload" element={<UploadPage />} />
           {!isAuthenticated && <Route path="/login" element={<LoginPage />} />}
         </Routes>
       </Router>

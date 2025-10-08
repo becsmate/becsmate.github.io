@@ -2,6 +2,7 @@
  * OCR (Optical Character Recognition) API services
  */
 import { apiClient } from './client';
+import { OCRResult } from '../types/ocr';
 
 export interface OCRJob {
   id: string;
@@ -20,6 +21,18 @@ export interface CreateOCRJobRequest {
 }
 
 export const ocrApi = {
+  /**
+   * Direct one-off OCR processing for a single uploaded file.
+   * Matches backend POST /api/process-file expecting 'file' form field.
+   */
+  processFile: async (file: File): Promise<OCRResult> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post<OCRResult>('/process-file', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  },
   /**
    * Upload an image for OCR processing
    */

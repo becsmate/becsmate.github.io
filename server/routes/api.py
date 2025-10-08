@@ -1,6 +1,18 @@
 """API routes blueprint."""
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 import os
+import uuid
+from ocr.ocr_service import OCRSpaceService
+from ocr.grok_parser import GroqAIParser
+from werkzeug.utils import secure_filename
+from flask import current_app as app
+
+def allowed_file(filename):
+    return '.' in filename and \
+        filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
+
+ocr_service = OCRSpaceService()
+grok_parser = GroqAIParser()
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
 
@@ -20,3 +32,46 @@ def about():
         description="Personal website of Becs",
         tech_stack=["Python", "Flask", "React", "TypeScript", "Material-UI", "Docker"]
     )
+
+@api_bp.route('/process-file', methods=['POST'])
+def process_file():
+    """Process uploaded image file"""
+    try:
+        if 'file' not in request.files:
+            return jsonify({'success': False, 'error': 'No file provided'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'success': False, 'error': 'No file selected'}), 400
+        
+        if file and allowed_file(file.filename):
+            # Save uploaded file temporarily
+            filename = secure_filename(f"{uuid.uuid4()}_{file.filename}")
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            
+            # Process with OCR
+            ocr_result = ocr_service.extract_text_from_file(filepath)
+            
+            # Clean up temporary file
+            try:
+                os.remove(filepath)
+            except:
+                pass
+            
+            if not ocr_result['success']:
+                return jsonify(ocr_result), 400
+            
+            # Parse the extracted text
+            parsed_data = grok_parser.parse_receipt_with_ai(ocr_result['text'])
+            
+            return jsonify({
+                'success': True,
+                'ocr_text': ocr_result['text'],
+                'parsed_data': parsed_data
+            })
+        
+        return jsonify({'success': False, 'error': 'Invalid file type'}), 400
+        
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
