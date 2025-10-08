@@ -9,3 +9,4 @@ passlib[bcrypt]==1.7.4
 # Production: 
 psycopg2-binary==2.9.9
 groq==0.32.0
+requests==2.32.3
