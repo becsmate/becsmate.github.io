@@ -6,5 +6,6 @@ SQLAlchemy>=2.0.25
 Flask-Migrate==4.0.5
 Flask-JWT-Extended==4.6.0
 passlib[bcrypt]==1.7.4
-# Production: psycopg2-binary==2.9.9
+# Production: 
+psycopg2-binary==2.9.9
 groq==0.32.0
