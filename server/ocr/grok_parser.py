@@ -27,6 +27,7 @@ class GroqAIParser:
         - Convert all amounts to numbers
         - Dates should be in YYYY-MM-DD format
         - Return ONLY valid JSON, no other text
+        - The input is in hungarian so expect hungarian text
 
         Receipt text:
         {ocr_text[:3000]}  # Limit length

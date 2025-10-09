@@ -2,6 +2,7 @@
 from flask import Blueprint, jsonify, request
 import os
 import uuid
+import easyocr
 from ..ocr.ocr_service import OCRSpaceService
 from ..ocr.grok_parser import GroqAIParser
 from werkzeug.utils import secure_filename
@@ -11,8 +12,9 @@ def allowed_file(filename):
     return '.' in filename and \
         filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
-ocr_service = OCRSpaceService()
 grok_parser = GroqAIParser()
+
+reader = easyocr.Reader(['hu'])
 
 api_bp = Blueprint("api", __name__, url_prefix="/api")
 
@@ -35,7 +37,7 @@ def about():
 
 @api_bp.route('/process-file', methods=['POST'])
 def process_file():
-    """Process uploaded image file"""
+    """Process uploaded image file using EasyOCR"""
     try:
         if 'file' not in request.files:
             return jsonify({'success': False, 'error': 'No file provided'}), 400
@@ -50,8 +52,9 @@ def process_file():
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
             
-            # Process with OCR
-            ocr_result = ocr_service.extract_text_from_file(filepath)
+            # Process with EasyOCR
+            result = reader.readtext(filepath, detail=0, decoder="beamsearch")
+            ocr_text = "\n".join(result)
             
             # Clean up temporary file
             try:
@@ -59,15 +62,15 @@ def process_file():
             except:
                 pass
             
-            if not ocr_result['success']:
-                return jsonify(ocr_result), 400
+            if not ocr_text.strip():
+                return jsonify({'success': False, 'error': 'OCR failed to extract text'}), 400
             
             # Parse the extracted text
-            parsed_data = grok_parser.parse_receipt_with_ai(ocr_result['text'])
+            parsed_data = grok_parser.parse_receipt_with_ai(ocr_text)
             
             return jsonify({
                 'success': True,
-                'ocr_text': ocr_result['text'],
+                'ocr_text': ocr_text,
                 'parsed_data': parsed_data
             })
         

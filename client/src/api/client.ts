@@ -6,7 +6,7 @@ import axios from 'axios';
 // Create axios instance with base configuration
 export const apiClient = axios.create({
   baseURL: process.env.NODE_ENV === 'production' ? '/api' : '/api',
-  timeout: 10000,
+  timeout: 1000000,
   headers: {
     'Content-Type': 'application/json',
   },

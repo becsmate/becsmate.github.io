@@ -7,7 +7,6 @@ load_dotenv()
 
 class OCRSpaceService:
     def __init__(self):
-        # self.api_key = os.getenv('OCR_SPACE_API_KEY', 'K82072529888957')
         self.api_key = os.getenv('OCR_API_KEY')
         self.api_url = 'https://api.ocr.space/parse/image'
     
