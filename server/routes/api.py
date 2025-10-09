@@ -53,7 +53,7 @@ def process_file():
             file.save(filepath)
             
             # Process with EasyOCR
-            result = reader.readtext(filepath, detail=0, decoder="beamsearch")
+            result = reader.readtext(filepath, detail=0, paragraph=True)
             ocr_text = "\n".join(result)
             
             # Clean up temporary file
