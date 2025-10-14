@@ -10,7 +10,7 @@ class OCRSpaceService:
         self.api_key = os.getenv('OCR_API_KEY')
         self.api_url = 'https://api.ocr.space/parse/image'
     
-    def extract_text_from_file(self, file_path: str) -> Dict:
+    def extract_text_from_image(self, file_path: str) -> Dict:
         """Extract text from image file"""
         try:
             with open(file_path, 'rb') as file:

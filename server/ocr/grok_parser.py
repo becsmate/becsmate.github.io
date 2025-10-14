@@ -1,6 +1,7 @@
 import os
 import json
 import re
+import base64
 from groq import Groq
 from dotenv import load_dotenv
 
@@ -10,7 +11,7 @@ class GroqAIParser:
         self.client = Groq(api_key=os.getenv('GROQ_API_KEY'))
         self.model = "llama-3.1-8b-instant"
     
-    def parse_receipt_with_ai(self, ocr_text: str) -> dict:
+    def parse_ocr_text(self, ocr_text: str) -> dict:
         """Use Groq + Llama 3 to parse receipt data"""
         
         prompt = f"""
@@ -27,7 +28,6 @@ class GroqAIParser:
         - Convert all amounts to numbers
         - Dates should be in YYYY-MM-DD format
         - Return ONLY valid JSON, no other text
-        - The input is in hungarian so expect hungarian text
 
         Receipt text:
         {ocr_text[:3000]}  # Limit length
