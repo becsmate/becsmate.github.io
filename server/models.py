@@ -1,8 +1,12 @@
 """Database models for the application."""
 from datetime import datetime
 from uuid import uuid4
+from typing import Optional
 import bcrypt
 from .extensions import db
+from .azure.storage import AzureStorageService
+
+storage_service = AzureStorageService()
 
 
 def generate_uuid():
@@ -18,9 +22,16 @@ class User(TimestampMixin, db.Model):
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     email = db.Column(db.String(255), unique=True, nullable=False, index=True)
     name = db.Column(db.String(120))
+    profile_image_blob = db.Column(db.String(500), nullable=True)
     password_hash = db.Column(db.String(255), nullable=False)
 
     wallets = db.relationship("Wallet", back_populates="owner", cascade="all,delete", lazy="dynamic")
+
+    def get_profile_image_url(self) -> Optional[str]:
+        """Generate SAS URL for profile image"""
+        if self.profile_image_blob:
+            return storage_service.generate_sas_url(self.profile_image_blob)
+        return None
 
     def set_password(self, password: str):
         # Truncate password to 72 bytes to avoid bcrypt length limit
@@ -33,6 +44,16 @@ class User(TimestampMixin, db.Model):
         # Truncate password to 72 bytes for consistency
         password_bytes = password.encode('utf-8')[:72]
         return bcrypt.checkpw(password_bytes, self.password_hash.encode('utf-8'))
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'email': self.email,
+            'name': self.name,
+            'profile_image_url': self.get_profile_image_url() if storage_service else None,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+        }
 
 class Wallet(TimestampMixin, db.Model):
     __tablename__ = "wallets"

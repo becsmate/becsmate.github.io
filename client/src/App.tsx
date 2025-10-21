@@ -8,21 +8,21 @@ import {
 } from "@mui/material";
 
 // Hooks
-import { useAboutData } from "./hooks/useApi";
+// import { useAboutData } from "./hooks/useApi";
 import { useAuthContext } from "./contexts/AuthContext";
 
 // Components
 import Navigation from "./components/Navigation";
 import Dashboard from "./components/dashboard";
+import DashboardNoAuth from "./components/dashboard_no_auth";
 import Login from "./components/auth";
 import ReceiptUpload from "./components/ocr";
+import Settings from "./components/settings";
 
 function App() {
-  const { isAuthenticated } = useAuthContext();
+  const { isAuthenticated, user } = useAuthContext();
 
   const [darkMode, setDarkMode] = useState(false);
-
-  const { data: aboutData, error } = useAboutData();
 
   const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
 
@@ -53,16 +53,20 @@ function App() {
         <Navigation darkMode={darkMode} toggleDarkMode={toggleDarkMode} />
 
         <Routes>
-          <Route
-            path="/"
-            element={<Dashboard aboutData={aboutData} error={error} />}
-          />
             {isAuthenticated ? (
+            <>
+              <Route path="/" element={<Dashboard user={user} />} />
               <Route path="/upload" element={<ReceiptUpload />} />
+              <Route path="/settings" element={<Settings user={user} />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </>
             ) : (
-              <Route path="/*" element={<Navigate to="/login" replace />} />
+            <>
+              <Route path="/" element={<DashboardNoAuth />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="*" element={<Navigate to="/login" replace />} />
+            </>
             )}
-          {!isAuthenticated && <Route path="/login" element={<Login />} />}
         </Routes>
       </Router>
     </ThemeProvider>

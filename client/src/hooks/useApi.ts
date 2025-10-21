@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { appApi, authApi, walletApi, ocrApi, type AboutData, type User, type Wallet, type Transaction, type OCRJob } from '../api';
+import { appApi, authApi, walletApi, ocrApi, type User, type Wallet, type Transaction, type OCRJob } from '../api';
 
 // Generic API hook for handling loading states and errors
 export function useApi<T>(
@@ -46,9 +46,6 @@ export function useApi<T>(
 }
 
 // App-specific hooks
-export function useAboutData() {
-  return useApi<AboutData>(() => appApi.about());
-}
 
 export function useHealthCheck() {
   return useApi(() => appApi.health());

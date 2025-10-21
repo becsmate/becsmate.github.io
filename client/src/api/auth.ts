@@ -7,6 +7,7 @@ export interface User {
   id: string;
   email: string;
   name?: string;
+  profile_image_url?: string;
 }
 
 export interface LoginRequest {

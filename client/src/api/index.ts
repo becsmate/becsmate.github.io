@@ -19,7 +19,6 @@ export type {
 } from './auth';
 
 export type {
-  AboutData,
   HealthData,
 } from './app';
 

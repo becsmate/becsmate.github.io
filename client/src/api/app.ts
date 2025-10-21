@@ -28,8 +28,4 @@ export const appApi = {
   /**
    * Get application about information
    */
-  about: async (): Promise<AboutData> => {
-    const response = await apiClient.get<AboutData>('/about');
-    return response.data;
-  },
 };

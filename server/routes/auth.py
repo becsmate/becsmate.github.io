@@ -49,7 +49,7 @@ def refresh():
 def me():
     uid = get_jwt_identity()
     user = User.query.get(uid)
-    return jsonify(user={"id": user.id, "email": user.email, "name": user.name})
+    return jsonify(user={"id": user.id, "email": user.email, "name": user.name, "profile_image_url": user.get_profile_image_url()})
 
 def _tokens_for(identity: str):
     return {

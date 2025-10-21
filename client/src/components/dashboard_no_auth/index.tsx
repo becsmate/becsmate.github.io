@@ -3,25 +3,14 @@ import {
   Container,
   Typography,
   Box,
-  Card,
-  CardContent,
-  Button,
-  Chip,
-  Grid,
-  Alert,
 } from '@mui/material';
-import { User } from '../../api/auth';
 
-interface DashboardProps {
-  user: User | null;
-}
-
-const Dashboard: React.FC<DashboardProps> = ({ user }) => {
+const DashboardNoAuth: React.FC = () => {
 
   return (
     <Container maxWidth="md" sx={{ mt: 4, mb: 4 }}>
-        <Box
-          sx={{
+        <Box 
+          sx={{ 
             display: 'flex', 
             flexDirection: 'column', 
             alignItems: 'center', 
@@ -29,12 +18,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user }) => {
             textAlign: 'center'
           }}
         >
-          <Typography variant="h4" component="h1" gutterBottom>
-            Welcome back, {user?.name}!
+          <Typography variant="h3" component="h1" gutterBottom>
+            Log in or Register to see more
           </Typography>
         </Box>
     </Container>
   );
 };
 
-export default Dashboard;
+export default DashboardNoAuth;
