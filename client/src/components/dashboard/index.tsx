@@ -10,13 +10,8 @@ import {
   Grid,
   Alert,
 } from '@mui/material';
-import {
-  GitHub,
-  LinkedIn,
-  Email,
-} from '@mui/icons-material';
 
-import { useAuthContext } from '../contexts/AuthContext';
+import { useAuthContext } from '../../contexts/AuthContext';
 
 interface AboutData {
   name: string;
@@ -24,12 +19,12 @@ interface AboutData {
   tech_stack: string[];
 }
 
-interface HomePageProps {
+interface DashboardProps {
   aboutData: AboutData | null;
   error: string | null;
 }
 
-const HomePage: React.FC<HomePageProps> = ({ aboutData, error }) => {
+const Dashboard: React.FC<DashboardProps> = ({ aboutData, error }) => {
 
   const { isAuthenticated, user } = useAuthContext();
 
@@ -68,4 +63,4 @@ const HomePage: React.FC<HomePageProps> = ({ aboutData, error }) => {
   );
 };
 
-export default HomePage;
+export default Dashboard;

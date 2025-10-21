@@ -68,11 +68,8 @@ const Navigation: React.FC<NavigationProps> = ({ darkMode, toggleDarkMode }) => 
   };
 
   const navItems = [
-    { label: 'Home', path: '/' },
-    { label: 'About', path: '/about' },
-    { label: 'Projects', path: '/projects' },
-    { label: 'Contact', path: '/contact' },
-    { label: 'Upload', path: '/upload' },
+    { label: 'Dashboard', path: '/', auth: false },
+    { label: 'Upload', path: '/upload', auth: true },
   ];
 
   const isActive = (path: string) => {
@@ -97,8 +94,9 @@ const Navigation: React.FC<NavigationProps> = ({ darkMode, toggleDarkMode }) => 
         </Typography>
         
         {!isMobile && (
-          <Box sx={{ flexGrow: 1, display: 'flex', gap: 1 }}>
+            <Box sx={{ flexGrow: 1, display: 'flex', gap: 1 }}>
             {navItems.map((item) => (
+              (isAuthenticated || !item.auth) && (
               <Button
                 key={item.path}
                 component={Link}
@@ -106,13 +104,14 @@ const Navigation: React.FC<NavigationProps> = ({ darkMode, toggleDarkMode }) => 
                 color="inherit"
                 variant={isActive(item.path) ? 'outlined' : 'text'}
                 sx={{
-                  borderColor: isActive(item.path) ? 'rgba(255, 255, 255, 0.5)' : 'transparent',
+                borderColor: isActive(item.path) ? 'rgba(255, 255, 255, 0.5)' : 'transparent',
                 }}
               >
                 {item.label}
               </Button>
+              )
             ))}
-          </Box>
+            </Box>
         )}
         {isMobile && (
           <>
@@ -150,6 +149,7 @@ const Navigation: React.FC<NavigationProps> = ({ darkMode, toggleDarkMode }) => 
                 }}
               >
                 {navItems.map((item) => (
+                  (isAuthenticated || !item.auth) && (
                   <Button
                     key={item.path}
                     component={Link}
@@ -159,6 +159,7 @@ const Navigation: React.FC<NavigationProps> = ({ darkMode, toggleDarkMode }) => 
                   >
                     {item.label}
                   </Button>
+                  )
                 ))}
                 {loginLogoutButton()}
               </Box>

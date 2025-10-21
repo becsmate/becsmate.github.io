@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import {
   ThemeProvider,
   createTheme,
@@ -13,14 +13,9 @@ import { useAuthContext } from "./contexts/AuthContext";
 
 // Components
 import Navigation from "./components/Navigation";
-
-// Pages
-import HomePage from "./pages/HomePage";
-import AboutPage from "./pages/AboutPage";
-import ProjectsPage from "./pages/ProjectsPage";
-import ContactPage from "./pages/ContactPage";
-import LoginPage from "./pages/LoginPage";
-import UploadPage from "./pages/UploadPage";
+import Dashboard from "./components/dashboard";
+import Login from "./components/auth";
+import ReceiptUpload from "./components/ocr";
 
 function App() {
   const { isAuthenticated } = useAuthContext();
@@ -60,13 +55,14 @@ function App() {
         <Routes>
           <Route
             path="/"
-            element={<HomePage aboutData={aboutData} error={error} />}
+            element={<Dashboard aboutData={aboutData} error={error} />}
           />
-          <Route path="/about" element={<AboutPage aboutData={aboutData} />} />
-          <Route path="/projects" element={<ProjectsPage />} />
-          <Route path="/contact" element={<ContactPage />} />
-          <Route path="/upload" element={<UploadPage />} />
-          {!isAuthenticated && <Route path="/login" element={<LoginPage />} />}
+            {isAuthenticated ? (
+              <Route path="/upload" element={<ReceiptUpload />} />
+            ) : (
+              <Route path="/*" element={<Navigate to="/login" replace />} />
+            )}
+          {!isAuthenticated && <Route path="/login" element={<Login />} />}
         </Routes>
       </Router>
     </ThemeProvider>

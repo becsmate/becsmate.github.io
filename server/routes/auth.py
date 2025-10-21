@@ -12,15 +12,20 @@ def register():
     password = data.get("password")
     name = data.get("name")
     if not email or not password:
-        return jsonify(error="Email and password required"), 400
+        return jsonify(error="Email and password required!"), 400
     if User.query.filter_by(email=email).first():
-        return jsonify(error="Email already registered"), 409
+        return jsonify(error="Email is already in use by another account!"), 409
     user = User(email=email, name=name)
     user.set_password(password)
     db.session.add(user)
     db.session.commit()
     tokens = _tokens_for(user.id)
-    return jsonify(user={"id": user.id, "email": user.email, "name": user.name}, **tokens), 201
+    return jsonify(
+        user={
+            "id": user.id,
+            "email": user.email,
+            "name": user.name
+        }, **tokens), 201
 
 @auth_bp.post("/login")
 def login():
@@ -29,7 +34,7 @@ def login():
     password = data.get("password")
     user = User.query.filter_by(email=email).first()
     if not user or not user.check_password(password or ""):
-        return jsonify(error="Invalid credentials"), 401
+        return jsonify(error="Invalid credentials!"), 401
     tokens = _tokens_for(user.id)
     return jsonify(user={"id": user.id, "email": user.email, "name": user.name}, **tokens)
 

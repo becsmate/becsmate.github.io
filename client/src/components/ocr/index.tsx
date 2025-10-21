@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Box } from "@mui/material";
-import { OCRResult } from "../types/ocr";
-import OCRUpload from "../components/OCR/OCRUpload";
-import ReceiptDisplay from "../components/OCR/ReceiptDisplay";
+import { OCRResult } from "../../types/ocr";
+import OCRUpload from "./OCRUpload";
+import ReceiptDisplay from "./ReceiptDisplay";
 
 const ReceiptUpload: React.FC = () => {
   const [ocrResult, setOcrResult] = useState<OCRResult | null>(null);

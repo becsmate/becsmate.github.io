@@ -1,6 +1,3 @@
-/**
- * Example Login Component demonstrating API usage
- */
 import React, { useState } from 'react';
 import {
   Box,
@@ -12,7 +9,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { useAuthContext } from '../../contexts/AuthContext';
-import { getErrorMessage, isValidEmail } from '../../utils';
+import { isValidEmail } from '../../utils';
 
 interface LoginFormProps {
   onSuccess?: () => void;
@@ -43,8 +40,8 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
     try {
       await login(email, password);
       onSuccess?.();
-    } catch (err) {
-      setFormError(getErrorMessage(err));
+    } catch (err: any) {
+      setFormError(err.response.data.error || 'An unexpected error occurred');
     }
   };
 
@@ -76,9 +73,12 @@ export const LoginForm = ({ onSuccess }: LoginFormProps) => {
         />
 
         {(error || formError) && (
-          <Alert severity="error" sx={{ mt: 2 }}>
-            {formError || error}
-          </Alert>
+          <>
+            {console.log(`Login error: formError=${formError}, error=${error}`)}
+            <Alert severity="error" sx={{ mt: 2 }}>
+              {formError || error}
+            </Alert>
+          </>
         )}
 
         <Button

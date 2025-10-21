@@ -49,8 +49,7 @@ def process_file():
         receipt_service = SmartReceiptService()
         
         result = receipt_service.process_receipt(filepath)
-        
-        # Clean up
+
         try:
             os.remove(filepath)
         except:

@@ -1,9 +1,9 @@
 import React from 'react';
 import { Container, Typography, Box } from '@mui/material';
-import LoginForm from '../components/auth/LoginForm';
-import RegisterForm from '../components/auth/RegisterForm';
+import LoginForm from './LoginForm';
+import RegisterForm from './RegisterForm';
 
-const LoginPage: React.FC = () => {
+const Login: React.FC = () => {
 
   const [register, setRegister] = React.useState(false);
 
@@ -37,4 +37,4 @@ const LoginPage: React.FC = () => {
   );
 }
 
-export default LoginPage;
+export default Login;

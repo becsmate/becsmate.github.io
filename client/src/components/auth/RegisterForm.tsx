@@ -9,7 +9,7 @@ import {
     CircularProgress,
 } from '@mui/material';
 import { useAuthContext } from '../../contexts/AuthContext';
-import { getErrorMessage, isValidEmail } from '../../utils';
+import { isValidEmail } from '../../utils';
 
 
 interface RegisterFormProps {
@@ -42,8 +42,8 @@ export const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
         try {
             await register(email, password, name);
             onSuccess?.();
-        } catch (err) {
-            setFormError(getErrorMessage(err));
+        } catch (err: any) {
+            setFormError(err.response.data.error || 'An unexpected error occurred');
         }
     };
 
@@ -81,11 +81,6 @@ export const RegisterForm = ({ onSuccess }: RegisterFormProps) => {
                 {formError && (
                     <Alert severity="error" sx={{ mt: 2 }}>
                         {formError}
-                    </Alert>
-                )}
-                {error && (
-                    <Alert severity="error" sx={{ mt: 2 }}>
-                        {error}
                     </Alert>
                 )}
 
