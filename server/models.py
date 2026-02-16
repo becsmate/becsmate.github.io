@@ -34,6 +34,7 @@ class User(TimestampMixin, db.Model):
         return None
 
     def set_password(self, password: str):
+        # TODO: DONT TRUCATE PASSWORD IN PRODUCTION
         # Truncate password to 72 bytes to avoid bcrypt length limit
         # This is safe as bcrypt only uses the first 72 bytes anyway
         password_bytes = password.encode('utf-8')[:72]
