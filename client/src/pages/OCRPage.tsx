@@ -25,7 +25,7 @@ export default function OCRPage() {
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState('');
   const [category, setCategory] = useState('Other');
-  const [walletId, setWalletId] = useState<number | ''>('');
+  const [walletId, setWalletId] = useState<string | ''>('');
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -58,7 +58,7 @@ export default function OCRPage() {
 
     try {
       await ocrApi.confirm({
-        wallet_id: walletId as number,
+        wallet_id: walletId,
         amount: Number(amount),
         category,
         date,
@@ -102,7 +102,7 @@ export default function OCRPage() {
             </FormControl>
             <FormControl fullWidth required>
               <InputLabel>Wallet</InputLabel>
-              <Select label="Wallet" value={walletId} onChange={(e) => setWalletId(e.target.value as number)}>
+              <Select label="Wallet" value={walletId} onChange={(e) => setWalletId(e.target.value)}>
                 {wallets.map((w) => <MenuItem key={w.id} value={w.id}>{w.name}</MenuItem>)}
               </Select>
             </FormControl>

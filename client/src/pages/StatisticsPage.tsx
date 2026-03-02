@@ -15,8 +15,8 @@ const PIE_COLORS = ['#1976d2', '#dc004e', '#2e7d32', '#ed6c02', '#9c27b0', '#028
 
 export default function StatisticsPage() {
   const { wallets } = useWallets();
-  const [walletId, setWalletId] = useState<number | ''>('');
-  const { summary, monthly, categories, loading, error } = useStatistics(walletId || null);
+  const [walletId, setWalletId] = useState<string | ''>('');
+  const { summary, monthly, categories, loading, error } = useStatistics(walletId || (''));
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 6 }}>
@@ -24,7 +24,7 @@ export default function StatisticsPage() {
 
       <FormControl sx={{ mb: 4, minWidth: 220 }}>
         <InputLabel>Select wallet</InputLabel>
-        <Select label="Select wallet" value={walletId} onChange={(e) => setWalletId(e.target.value as number)}>
+        <Select label="Select wallet" value={walletId} onChange={(e) => setWalletId(e.target.value)}>
           {wallets.map((w) => <MenuItem key={w.id} value={w.id}>{w.name}</MenuItem>)}
         </Select>
       </FormControl>

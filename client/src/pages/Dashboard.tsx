@@ -12,7 +12,7 @@ import { useAuthContext } from '../contexts/AuthContext';
 
 const CATEGORIES = ['Food', 'Transport', 'Shopping', 'Health', 'Entertainment', 'Utilities', 'Other'];
 
-function TransactionTable({ walletId }: { walletId: number }) {
+function TransactionTable({ walletId }: { walletId: string }) {
   const [filters, setFilters] = useState<TransactionFilters>({ sort_by: 'date', order: 'desc' });
   const { transactions, loading, error } = useTransactions(walletId, filters);
 
