@@ -59,7 +59,7 @@ export default function OCRPage() {
     try {
       await ocrApi.confirm({
         wallet_id: walletId,
-        amount: Number(amount),
+        amount: Number(-amount),
         category,
         date,
         merchant_name: merchant || undefined,

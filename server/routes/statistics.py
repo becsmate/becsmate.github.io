@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from sqlalchemy import func
 from extensions import db
-from models import Wallet, Transaction
+from models import Wallet, Transaction, User
 
 statistics_bp = Blueprint('statistics', __name__, url_prefix='/api/statistics')
 
@@ -19,11 +19,12 @@ def summary(wallet_id):
     if not _check_wallet_access(wallet_id, user_id):
         return jsonify({'error': 'Wallet not found'}), 404
 
-    total = db.session.query(func.sum(Transaction.amount)).filter_by(wallet_id=wallet_id).scalar() or 0
-    income = db.session.query(func.sum(Transaction.amount)).filter(
+    transaction_query = db.session.query(func.sum(Transaction.amount))
+    total = transaction_query.filter_by(wallet_id=wallet_id).scalar() or 0
+    income = transaction_query.filter(
         Transaction.wallet_id == wallet_id, Transaction.amount > 0
     ).scalar() or 0
-    expenses = db.session.query(func.sum(Transaction.amount)).filter(
+    expenses = transaction_query.filter(
         Transaction.wallet_id == wallet_id, Transaction.amount < 0
     ).scalar() or 0
     count = Transaction.query.filter_by(wallet_id=wallet_id).count()
@@ -68,5 +69,37 @@ def categories(wallet_id):
 
     return jsonify({'categories': [
         {'category': row.category, 'total': float(row.total)}
+        for row in rows
+    ]})
+
+@statistics_bp.route('/summary', methods=['GET'])
+@jwt_required()
+def user_summary():
+    user_id = get_jwt_identity()
+    transaction_query = db.session.query(func.sum(Transaction.amount))
+    total = transaction_query.filter_by(created_by=user_id).scalar() or 0
+    income = transaction_query.filter(Transaction.created_by == user_id, Transaction.amount > 0).scalar() or 0
+    expenses = transaction_query.filter(Transaction.created_by == user_id, Transaction.amount < 0).scalar() or 0
+    count = Transaction.query.filter_by(created_by=user_id).count()
+
+    return jsonify({
+        'total': float(total),
+        'income': float(income),
+        'expenses': float(expenses),
+        'transaction_count': count,
+    })
+
+@statistics_bp.route('/monthly', methods=['GET'])
+@jwt_required()
+def user_monthly():
+    user_id = get_jwt_identity()
+
+    rows = db.session.query(
+        func.date_trunc('month', Transaction.date).label('month'),
+        func.sum(Transaction.amount).label('total'),
+    ).filter_by(created_by=user_id).group_by('month').order_by('month').all()
+
+    return jsonify({'monthly': [
+        {'month': row.month.strftime('%Y-%m'), 'total': float(row.total)}
         for row in rows
     ]})
