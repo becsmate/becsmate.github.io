@@ -16,7 +16,7 @@ def _get_wallet_or_404(wallet_id, user_id):
 @wallets_bp.route('', methods=['GET'])
 @jwt_required()
 def get_wallets():
-    user_id = int(get_jwt_identity())
+    user_id = get_jwt_identity()
     wallets = Wallet.query.filter_by(owner_id=user_id).all()
     return jsonify({'wallets': [w.to_dict() for w in wallets]})
 
@@ -24,7 +24,7 @@ def get_wallets():
 @wallets_bp.route('', methods=['POST'])
 @jwt_required()
 def create_wallet():
-    user_id = int(get_jwt_identity())
+    user_id = get_jwt_identity()
     data = request.get_json()
     if not data:
         return jsonify({'error': 'No data provided'}), 400
@@ -43,20 +43,20 @@ def create_wallet():
     return jsonify({'wallet': wallet.to_dict()}), 201
 
 
-@wallets_bp.route('/<int:wallet_id>', methods=['GET'])
+@wallets_bp.route('/<string:wallet_id>', methods=['GET'])
 @jwt_required()
 def get_wallet(wallet_id):
-    user_id = int(get_jwt_identity())
+    user_id = get_jwt_identity()
     wallet = _get_wallet_or_404(wallet_id, user_id)
     if not wallet:
         return jsonify({'error': 'Wallet not found'}), 404
     return jsonify({'wallet': wallet.to_dict()})
 
 
-@wallets_bp.route('/<int:wallet_id>', methods=['PATCH'])
+@wallets_bp.route('/<string:wallet_id>', methods=['PATCH'])
 @jwt_required()
 def update_wallet(wallet_id):
-    user_id = int(get_jwt_identity())
+    user_id = get_jwt_identity()
     wallet = _get_wallet_or_404(wallet_id, user_id)
     if not wallet:
         return jsonify({'error': 'Wallet not found'}), 404
@@ -76,10 +76,10 @@ def update_wallet(wallet_id):
     return jsonify({'wallet': wallet.to_dict()})
 
 
-@wallets_bp.route('/<int:wallet_id>', methods=['DELETE'])
+@wallets_bp.route('/<string:wallet_id>', methods=['DELETE'])
 @jwt_required()
 def delete_wallet(wallet_id):
-    user_id = int(get_jwt_identity())
+    user_id = get_jwt_identity()
     wallet = _get_wallet_or_404(wallet_id, user_id)
     if not wallet:
         return jsonify({'error': 'Wallet not found'}), 404

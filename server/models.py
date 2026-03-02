@@ -1,11 +1,17 @@
 from datetime import datetime
+from uuid import uuid4
 from werkzeug.security import generate_password_hash, check_password_hash
 from extensions import db
 
+
+def generate_uuid():
+    return str(uuid4())
+
+
 class User(db.Model):
     __tablename__ = 'users'
-    
-    id = db.Column(db.Integer, primary_key=True)
+
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     email = db.Column(db.String(120), unique=True, nullable=False)
     name = db.Column(db.String(100), nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
@@ -14,7 +20,7 @@ class User(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
-    wallets = db.relationship('Wallet', backref='owner', lazy=True)
+    wallets = db.relationship('Wallet', backref='owner', lazy=True, cascade='all, delete-orphan')
     transactions = db.relationship('Transaction', backref='creator', lazy=True)
     ocr_jobs = db.relationship('OCRJob', backref='user', lazy=True)
 
@@ -36,11 +42,11 @@ class User(db.Model):
 
 class Wallet(db.Model):
     __tablename__ = 'wallets'
-    
-    id = db.Column(db.Integer, primary_key=True)
+
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     name = db.Column(db.String(100), nullable=False)
-    type = db.Column(db.String(20), nullable=False) # 'personal' | 'group'
-    owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    type = db.Column(db.String(20), nullable=False)  # 'personal' | 'group'
+    owner_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -60,21 +66,21 @@ class Wallet(db.Model):
 
 class Transaction(db.Model):
     __tablename__ = 'transactions'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    wallet_id = db.Column(db.Integer, db.ForeignKey('wallets.id'), nullable=False)
+
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    wallet_id = db.Column(db.String(36), db.ForeignKey('wallets.id'), nullable=False)
     amount = db.Column(db.Numeric(10, 2), nullable=False)
     currency = db.Column(db.String(10), default='HUF')
     category = db.Column(db.String(50), nullable=False)
     date = db.Column(db.DateTime, nullable=False)
     description = db.Column(db.String(255), nullable=True)
     merchant_name = db.Column(db.String(100), nullable=True)
-    
+
     # OCR specific fields
     original_image_url = db.Column(db.String(255), nullable=True)
     ocr_raw_text = db.Column(db.Text, nullable=True)
-    
-    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    created_by = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -97,9 +103,9 @@ class Transaction(db.Model):
 
 class OCRJob(db.Model):
     __tablename__ = 'ocr_jobs'
-    
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
     image_path = db.Column(db.String(255), nullable=False)
     status = db.Column(db.String(20), default='pending') # pending, processing, completed, failed
     raw_text = db.Column(db.Text, nullable=True)

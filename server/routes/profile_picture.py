@@ -19,7 +19,7 @@ def upload_profile_picture():
     if not conn_str:
         return jsonify({'error': 'Profile picture storage not configured'}), 503
 
-    user_id = int(get_jwt_identity())
+    user_id = get_jwt_identity()
     user = db.session.get(User, user_id)
     if not user:
         return jsonify({'error': 'User not found'}), 404
@@ -46,7 +46,7 @@ def upload_profile_picture():
 @profile_bp.route('/profile-picture/url', methods=['GET'])
 @jwt_required()
 def get_profile_picture_url():
-    user_id = int(get_jwt_identity())
+    user_id = get_jwt_identity()
     user = db.session.get(User, user_id)
     if not user or not user.profile_image_url:
         return jsonify({'image_url': None})

@@ -19,8 +19,8 @@ export interface OCRResult {
 }
 
 export interface OCRJob {
-  id: number;
-  user_id: number;
+  id: string;
+  user_id: string;
   image_path: string;
   status: 'pending' | 'processing' | 'completed' | 'failed';
   raw_text: string | null;
@@ -30,7 +30,7 @@ export interface OCRJob {
 }
 
 export interface ConfirmReceiptRequest {
-  wallet_id: number;
+  wallet_id: string;
   amount: number;
   currency?: string;
   category: string;
@@ -39,7 +39,7 @@ export interface ConfirmReceiptRequest {
   description?: string;
   original_image_url?: string;
   ocr_raw_text?: string;
-  job_id?: number;
+  job_id?: string;
 }
 
 export const ocrApi = {
@@ -57,12 +57,12 @@ export const ocrApi = {
     return data.jobs;
   },
 
-  getJob: async (id: number): Promise<OCRJob> => {
+  getJob: async (id: string): Promise<OCRJob> => {
     const { data } = await apiClient.get<{ job: OCRJob }>(`/ocr/jobs/${id}`);
     return data.job;
   },
 
-  deleteJob: async (id: number): Promise<void> => {
+  deleteJob: async (id: string): Promise<void> => {
     await apiClient.delete(`/ocr/jobs/${id}`);
   },
 

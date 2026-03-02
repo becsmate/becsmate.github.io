@@ -74,7 +74,7 @@ def refresh():
 @jwt_required()
 def me():
     try:
-        user_id = int(get_jwt_identity())
+        user_id = get_jwt_identity()
     except (ValueError, TypeError):
         return jsonify({'error': 'Invalid or expired token, please log in again'}), 401
     user = db.session.get(User, user_id)

@@ -14,10 +14,10 @@ def _get_wallet_or_abort(wallet_id, user_id):
     return wallet
 
 
-@transactions_bp.route('/api/wallets/<int:wallet_id>/transactions', methods=['GET'])
+@transactions_bp.route('/api/wallets/<string:wallet_id>/transactions', methods=['GET'])
 @jwt_required()
 def get_transactions(wallet_id):
-    user_id = int(get_jwt_identity())
+    user_id = get_jwt_identity()
     if not _get_wallet_or_abort(wallet_id, user_id):
         return jsonify({'error': 'Wallet not found'}), 404
 
@@ -43,10 +43,10 @@ def get_transactions(wallet_id):
     return jsonify({'transactions': [t.to_dict() for t in transactions]})
 
 
-@transactions_bp.route('/api/wallets/<int:wallet_id>/transactions', methods=['POST'])
+@transactions_bp.route('/api/wallets/<string:wallet_id>/transactions', methods=['POST'])
 @jwt_required()
 def create_transaction(wallet_id):
-    user_id = int(get_jwt_identity())
+    user_id = get_jwt_identity()
     if not _get_wallet_or_abort(wallet_id, user_id):
         return jsonify({'error': 'Wallet not found'}), 404
 
@@ -78,10 +78,10 @@ def create_transaction(wallet_id):
     return jsonify({'transaction': transaction.to_dict()}), 201
 
 
-@transactions_bp.route('/api/wallets/<int:wallet_id>/transactions/<int:transaction_id>', methods=['PATCH'])
+@transactions_bp.route('/api/wallets/<string:wallet_id>/transactions/<string:transaction_id>', methods=['PATCH'])
 @jwt_required()
 def update_transaction(wallet_id, transaction_id):
-    user_id = int(get_jwt_identity())
+    user_id = get_jwt_identity()
     if not _get_wallet_or_abort(wallet_id, user_id):
         return jsonify({'error': 'Wallet not found'}), 404
 
@@ -102,10 +102,10 @@ def update_transaction(wallet_id, transaction_id):
     return jsonify({'transaction': transaction.to_dict()})
 
 
-@transactions_bp.route('/api/wallets/<int:wallet_id>/transactions/<int:transaction_id>', methods=['DELETE'])
+@transactions_bp.route('/api/wallets/<string:wallet_id>/transactions/<string:transaction_id>', methods=['DELETE'])
 @jwt_required()
 def delete_transaction(wallet_id, transaction_id):
-    user_id = int(get_jwt_identity())
+    user_id = get_jwt_identity()
     if not _get_wallet_or_abort(wallet_id, user_id):
         return jsonify({'error': 'Wallet not found'}), 404
 

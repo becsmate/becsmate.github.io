@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { apiClient } from './apiClient';
 
 export interface User {
-  id: number;
+  id: string;
   email: string;
   name: string;
   profile_image_url: string | null;

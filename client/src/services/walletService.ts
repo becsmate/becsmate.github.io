@@ -2,17 +2,17 @@ import { useState, useEffect, useCallback } from 'react';
 import { apiClient } from './apiClient';
 
 export interface Wallet {
-  id: number;
+  id: string;
   name: string;
   type: 'personal' | 'group';
-  owner_id: number;
+  owner_id: string;
   created_at: string;
   updated_at: string;
 }
 
 export interface Transaction {
-  id: number;
-  wallet_id: number;
+  id: string;
+  wallet_id: string;
   amount: number;
   currency: string;
   category: string;
@@ -21,7 +21,7 @@ export interface Transaction {
   merchant_name: string | null;
   original_image_url: string | null;
   ocr_raw_text: string | null;
-  created_by: number;
+  created_by: string;
   created_at: string;
 }
 
@@ -52,7 +52,7 @@ export const walletApi = {
     return data.wallets;
   },
 
-  getWallet: async (id: number): Promise<Wallet> => {
+  getWallet: async (id: string): Promise<Wallet> => {
     const { data } = await apiClient.get<{ wallet: Wallet }>(`/wallets/${id}`);
     return data.wallet;
   },
@@ -62,16 +62,16 @@ export const walletApi = {
     return data.wallet;
   },
 
-  updateWallet: async (id: number, payload: { name?: string; type?: 'personal' | 'group' }): Promise<Wallet> => {
+  updateWallet: async (id: string, payload: { name?: string; type?: 'personal' | 'group' }): Promise<Wallet> => {
     const { data } = await apiClient.patch<{ wallet: Wallet }>(`/wallets/${id}`, payload);
     return data.wallet;
   },
 
-  deleteWallet: async (id: number): Promise<void> => {
+  deleteWallet: async (id: string): Promise<void> => {
     await apiClient.delete(`/wallets/${id}`);
   },
 
-  getTransactions: async (walletId: number, filters?: TransactionFilters): Promise<Transaction[]> => {
+  getTransactions: async (walletId: string, filters?: TransactionFilters): Promise<Transaction[]> => {
     const { data } = await apiClient.get<{ transactions: Transaction[] }>(
       `/wallets/${walletId}/transactions`,
       { params: filters }
@@ -79,7 +79,7 @@ export const walletApi = {
     return data.transactions;
   },
 
-  createTransaction: async (walletId: number, payload: CreateTransactionRequest): Promise<Transaction> => {
+  createTransaction: async (walletId: string, payload: CreateTransactionRequest): Promise<Transaction> => {
     const { data } = await apiClient.post<{ transaction: Transaction }>(
       `/wallets/${walletId}/transactions`,
       payload
@@ -88,8 +88,8 @@ export const walletApi = {
   },
 
   updateTransaction: async (
-    walletId: number,
-    transactionId: number,
+    walletId: string,
+    transactionId: string,
     payload: Partial<CreateTransactionRequest>
   ): Promise<Transaction> => {
     const { data } = await apiClient.patch<{ transaction: Transaction }>(
@@ -99,7 +99,7 @@ export const walletApi = {
     return data.transaction;
   },
 
-  deleteTransaction: async (walletId: number, transactionId: number): Promise<void> => {
+  deleteTransaction: async (walletId: string, transactionId: string): Promise<void> => {
     await apiClient.delete(`/wallets/${walletId}/transactions/${transactionId}`);
   },
 };
@@ -125,7 +125,7 @@ export function useWallets() {
   return { wallets, loading, error, refetch: fetch };
 }
 
-export function useTransactions(walletId: number, filters?: TransactionFilters) {
+export function useTransactions(walletId: string, filters?: TransactionFilters) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

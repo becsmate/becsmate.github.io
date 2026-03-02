@@ -12,10 +12,10 @@ def _check_wallet_access(wallet_id, user_id):
     return wallet if wallet and wallet.owner_id == user_id else None
 
 
-@statistics_bp.route('/<int:wallet_id>/summary', methods=['GET'])
+@statistics_bp.route('/<string:wallet_id>/summary', methods=['GET'])
 @jwt_required()
 def summary(wallet_id):
-    user_id = int(get_jwt_identity())
+    user_id = get_jwt_identity()
     if not _check_wallet_access(wallet_id, user_id):
         return jsonify({'error': 'Wallet not found'}), 404
 
@@ -36,10 +36,10 @@ def summary(wallet_id):
     })
 
 
-@statistics_bp.route('/<int:wallet_id>/monthly', methods=['GET'])
+@statistics_bp.route('/<string:wallet_id>/monthly', methods=['GET'])
 @jwt_required()
 def monthly(wallet_id):
-    user_id = int(get_jwt_identity())
+    user_id = get_jwt_identity()
     if not _check_wallet_access(wallet_id, user_id):
         return jsonify({'error': 'Wallet not found'}), 404
 
@@ -54,10 +54,10 @@ def monthly(wallet_id):
     ]})
 
 
-@statistics_bp.route('/<int:wallet_id>/categories', methods=['GET'])
+@statistics_bp.route('/<string:wallet_id>/categories', methods=['GET'])
 @jwt_required()
 def categories(wallet_id):
-    user_id = int(get_jwt_identity())
+    user_id = get_jwt_identity()
     if not _check_wallet_access(wallet_id, user_id):
         return jsonify({'error': 'Wallet not found'}), 404
 

@@ -19,23 +19,23 @@ export interface CategoryData {
 }
 
 export const statisticsApi = {
-  getSummary: async (walletId: number): Promise<WalletSummary> => {
+  getSummary: async (walletId: string): Promise<WalletSummary> => {
     const { data } = await apiClient.get<WalletSummary>(`/statistics/${walletId}/summary`);
     return data;
   },
 
-  getMonthly: async (walletId: number): Promise<MonthlyData[]> => {
+  getMonthly: async (walletId: string): Promise<MonthlyData[]> => {
     const { data } = await apiClient.get<{ monthly: MonthlyData[] }>(`/statistics/${walletId}/monthly`);
     return data.monthly;
   },
 
-  getCategories: async (walletId: number): Promise<CategoryData[]> => {
+  getCategories: async (walletId: string): Promise<CategoryData[]> => {
     const { data } = await apiClient.get<{ categories: CategoryData[] }>(`/statistics/${walletId}/categories`);
     return data.categories;
   },
 };
 
-export function useStatistics(walletId: number | null) {
+export function useStatistics(walletId: string | null) {
   const [summary, setSummary] = useState<WalletSummary | null>(null);
   const [monthly, setMonthly] = useState<MonthlyData[]>([]);
   const [categories, setCategories] = useState<CategoryData[]>([]);

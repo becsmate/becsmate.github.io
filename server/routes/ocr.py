@@ -17,7 +17,7 @@ def _allowed_file(filename):
 @ocr_bp.route('/process', methods=['POST'])
 @jwt_required()
 def process_receipt():
-    user_id = int(get_jwt_identity())
+    user_id = get_jwt_identity()
 
     if 'file' not in request.files:
         return jsonify({'error': 'No file provided'}), 400
@@ -58,25 +58,25 @@ def process_receipt():
 @ocr_bp.route('/jobs', methods=['GET'])
 @jwt_required()
 def get_jobs():
-    user_id = int(get_jwt_identity())
+    user_id = get_jwt_identity()
     jobs = OCRJob.query.filter_by(user_id=user_id).order_by(OCRJob.created_at.desc()).all()
     return jsonify({'jobs': [j.to_dict() for j in jobs]})
 
 
-@ocr_bp.route('/jobs/<int:job_id>', methods=['GET'])
+@ocr_bp.route('/jobs/<string:job_id>', methods=['GET'])
 @jwt_required()
 def get_job(job_id):
-    user_id = int(get_jwt_identity())
+    user_id = get_jwt_identity()
     job = db.session.get(OCRJob, job_id)
     if not job or job.user_id != user_id:
         return jsonify({'error': 'Job not found'}), 404
     return jsonify({'job': job.to_dict()})
 
 
-@ocr_bp.route('/jobs/<int:job_id>', methods=['DELETE'])
+@ocr_bp.route('/jobs/<string:job_id>', methods=['DELETE'])
 @jwt_required()
 def delete_job(job_id):
-    user_id = int(get_jwt_identity())
+    user_id = get_jwt_identity()
     job = db.session.get(OCRJob, job_id)
     if not job or job.user_id != user_id:
         return jsonify({'error': 'Job not found'}), 404
@@ -88,7 +88,7 @@ def delete_job(job_id):
 @ocr_bp.route('/confirm', methods=['POST'])
 @jwt_required()
 def confirm_receipt():
-    user_id = int(get_jwt_identity())
+    user_id = get_jwt_identity()
     data = request.get_json()
     if not data:
         return jsonify({'error': 'No data provided'}), 400
@@ -102,7 +102,7 @@ def confirm_receipt():
         return jsonify({'error': 'wallet_id, amount, category and date are required'}), 400
 
     transaction = Transaction(
-        wallet_id=int(wallet_id),
+        wallet_id=wallet_id,
         amount=float(amount),
         currency=data.get('currency', 'HUF'),
         category=category,
@@ -116,7 +116,7 @@ def confirm_receipt():
     db.session.add(transaction)
 
     if job_id := data.get('job_id'):
-        job = db.session.get(OCRJob, int(job_id))
+        job = db.session.get(OCRJob, job_id)
         if job and job.user_id == user_id:
             job.status = 'completed'
             job.completed_at = datetime.utcnow()
