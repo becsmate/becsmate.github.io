@@ -1,6 +1,7 @@
 import os
 from flask import Flask
 from flask_cors import CORS
+from sqlalchemy import text
 from config import Config
 from extensions import db, migrate, jwt
 
@@ -34,7 +35,21 @@ def create_app():
 
     with app.app_context():
         db.create_all()
+        # Add columns introduced after initial deploy (safe to run repeatedly)
+        _run_migrations(app)
 
     return app
+
+
+def _run_migrations(app):
+    """Apply any schema changes that db.create_all() won't handle (existing tables)."""
+    migrations = [
+        "ALTER TABLE users ADD COLUMN IF NOT EXISTS profile_image_url VARCHAR(255)",
+    ]
+    with app.app_context():
+        with db.engine.connect() as conn:
+            for stmt in migrations:
+                conn.execute(text(stmt))
+            conn.commit()
 
 app = create_app()

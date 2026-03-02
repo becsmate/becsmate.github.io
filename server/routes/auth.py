@@ -73,7 +73,10 @@ def refresh():
 @auth_bp.route('/me', methods=['GET'])
 @jwt_required()
 def me():
-    user_id = int(get_jwt_identity())
+    try:
+        user_id = int(get_jwt_identity())
+    except (ValueError, TypeError):
+        return jsonify({'error': 'Invalid or expired token, please log in again'}), 401
     user = db.session.get(User, user_id)
     if not user:
         return jsonify({'error': 'User not found'}), 404
