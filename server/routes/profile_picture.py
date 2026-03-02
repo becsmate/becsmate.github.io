@@ -32,7 +32,7 @@ def upload_profile_picture():
         return jsonify({'error': 'Invalid file type. Allowed: jpg, jpeg, png'}), 400
 
     try:
-        from azure.storage import AzureStorageService
+        from azure_services.storage import AzureStorageService
         storage = AzureStorageService(conn_str)
         image_url = storage.upload_profile_image(file.stream, user_id)
     except Exception as e:
