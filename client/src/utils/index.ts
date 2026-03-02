@@ -1,85 +1,31 @@
-/**
- * Utility functions for API error handling and common operations
- */
+export const formatCurrency = (amount: number, currency = 'HUF'): string =>
+  new Intl.NumberFormat('hu-HU', { style: 'currency', currency }).format(amount);
 
-/**
- * Extract error message from various error types
- */
-export function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) {
-    return error.message;
+export const formatDate = (dateStr: string): string =>
+  new Date(dateStr).toLocaleDateString('hu-HU', { year: 'numeric', month: 'short', day: 'numeric' });
+
+export const formatDateForInput = (dateStr: string): string =>
+  new Date(dateStr).toISOString().split('T')[0];
+
+export const isImageFile = (file: File): boolean =>
+  ['image/jpeg', 'image/png', 'image/webp'].includes(file.type);
+
+export const isValidEmail = (email: string): boolean =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+export const getErrorMessage = (err: unknown): string => {
+  if (err instanceof Error) return err.message;
+  if (typeof err === 'object' && err !== null && 'response' in err) {
+    const e = err as any;
+    return e.response?.data?.error ?? 'An unexpected error occurred';
   }
-  
-  if (typeof error === 'string') {
-    return error;
-  }
-  
-  if (error && typeof error === 'object' && 'message' in error) {
-    return String((error as any).message);
-  }
-  
-  if (error && typeof error === 'object' && 'error' in error) {
-    return String((error as any).error);
-  }
-  
   return 'An unexpected error occurred';
-}
+};
 
-/**
- * Format currency values
- */
-export function formatCurrency(amount: number, currency = 'USD'): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency,
-  }).format(amount);
-}
-
-/**
- * Format dates consistently
- */
-export function formatDate(date: string | Date): string {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return dateObj.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  });
-}
-
-/**
- * Format date for input fields
- */
-export function formatDateForInput(date: string | Date): string {
-  const dateObj = typeof date === 'string' ? new Date(date) : date;
-  return dateObj.toISOString().split('T')[0];
-}
-
-/**
- * Check if a file is an image
- */
-export function isImageFile(file: File): boolean {
-  return file.type.startsWith('image/');
-}
-
-/**
- * Validate email format
- */
-export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
-
-/**
- * Debounce function for search/input delays
- */
-export function debounce<T extends (...args: any[]) => any>(
-  func: T,
-  wait: number
-): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout;
+export const debounce = <T extends (...args: any[]) => void>(fn: T, ms: number) => {
+  let timer: ReturnType<typeof setTimeout>;
   return (...args: Parameters<T>) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
+    clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), ms);
   };
-}
+};

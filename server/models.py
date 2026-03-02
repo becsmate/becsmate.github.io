@@ -1,108 +1,121 @@
-"""Database models for the application."""
 from datetime import datetime
-from uuid import uuid4
-from typing import Optional
-import bcrypt
-from .extensions import db
-from .azure.storage import AzureStorageService
+from werkzeug.security import generate_password_hash, check_password_hash
+from extensions import db
 
-storage_service = AzureStorageService()
-
-
-def generate_uuid():
-    """Generate a UUID string."""
-    return str(uuid4())
-
-class TimestampMixin:
-    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
-
-class User(TimestampMixin, db.Model):
-    __tablename__ = "users"
-    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    email = db.Column(db.String(255), unique=True, nullable=False, index=True)
-    name = db.Column(db.String(120))
-    profile_image_blob = db.Column(db.String(500), nullable=True)
+class User(db.Model):
+    __tablename__ = 'users'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
     password_hash = db.Column(db.String(255), nullable=False)
+    profile_image_url = db.Column(db.String(255), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    wallets = db.relationship("Wallet", back_populates="owner", cascade="all,delete", lazy="dynamic")
+    # Relationships
+    wallets = db.relationship('Wallet', backref='owner', lazy=True)
+    transactions = db.relationship('Transaction', backref='creator', lazy=True)
+    ocr_jobs = db.relationship('OCRJob', backref='user', lazy=True)
 
-    def get_profile_image_url(self) -> Optional[str]:
-        """Generate SAS URL for profile image"""
-        if self.profile_image_blob:
-            return storage_service.generate_sas_url(self.profile_image_blob)
-        return None
-
-    def set_password(self, password: str):
-        # TODO: DONT TRUCATE PASSWORD IN PRODUCTION
-        # Truncate password to 72 bytes to avoid bcrypt length limit
-        # This is safe as bcrypt only uses the first 72 bytes anyway
-        password_bytes = password.encode('utf-8')[:72]
-        salt = bcrypt.gensalt()
-        self.password_hash = bcrypt.hashpw(password_bytes, salt).decode('utf-8')
-
-    def check_password(self, password: str) -> bool:
-        # Truncate password to 72 bytes for consistency
-        password_bytes = password.encode('utf-8')[:72]
-        return bcrypt.checkpw(password_bytes, self.password_hash.encode('utf-8'))
+    # Functions
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
     
     def to_dict(self):
         return {
             'id': self.id,
             'email': self.email,
             'name': self.name,
-            'profile_image_url': self.get_profile_image_url() if storage_service else None,
-            'created_at': self.created_at.isoformat() if self.created_at else None,
-            'updated_at': self.updated_at.isoformat() if self.updated_at else None
+            'profile_image_url': self.profile_image_url,
+            'created_at': self.created_at.isoformat(),
         }
 
-class Wallet(TimestampMixin, db.Model):
-    __tablename__ = "wallets"
-    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    name = db.Column(db.String(120), nullable=False)
-    type = db.Column(db.Enum("personal", "group", name="wallet_type"), nullable=False, default="personal")
-    owner_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False)
+class Wallet(db.Model):
+    __tablename__ = 'wallets'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    type = db.Column(db.String(20), nullable=False) # 'personal' | 'group'
+    owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    transactions = db.relationship('Transaction', backref='wallet', lazy=True, cascade="all, delete-orphan")
 
-    owner = db.relationship("User", back_populates="wallets")
-    members = db.relationship("WalletMember", back_populates="wallet", cascade="all,delete")
-    transactions = db.relationship("Transaction", back_populates="wallet", cascade="all,delete")
+    # Functions
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'type': self.type,
+            'owner_id': self.owner_id,
+            'created_at': self.created_at.isoformat(),
+            'updated_at': self.updated_at.isoformat(),
+        }
 
-class WalletMember(TimestampMixin, db.Model):
-    __tablename__ = "wallet_members"
-    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    wallet_id = db.Column(db.String(36), db.ForeignKey("wallets.id"), nullable=False)
-    user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False)
-    role = db.Column(db.Enum("owner", "member", name="member_role"), nullable=False, default="member")
+class Transaction(db.Model):
+    __tablename__ = 'transactions'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    wallet_id = db.Column(db.Integer, db.ForeignKey('wallets.id'), nullable=False)
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
+    currency = db.Column(db.String(10), default='HUF')
+    category = db.Column(db.String(50), nullable=False)
+    date = db.Column(db.DateTime, nullable=False)
+    description = db.Column(db.String(255), nullable=True)
+    merchant_name = db.Column(db.String(100), nullable=True)
+    
+    # OCR specific fields
+    original_image_url = db.Column(db.String(255), nullable=True)
+    ocr_raw_text = db.Column(db.Text, nullable=True)
+    
+    created_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-    wallet = db.relationship("Wallet", back_populates="members")
-    user = db.relationship("User")
+    # Functions
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'wallet_id': self.wallet_id,
+            'amount': float(self.amount),
+            'currency': self.currency,
+            'category': self.category,
+            'date': self.date.isoformat(),
+            'description': self.description,
+            'merchant_name': self.merchant_name,
+            'original_image_url': self.original_image_url,
+            'ocr_raw_text': self.ocr_raw_text,
+            'created_by': self.created_by,
+            'created_at': self.created_at.isoformat(),
+        }
 
-class Transaction(TimestampMixin, db.Model):
-    __tablename__ = "transactions"
-    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    wallet_id = db.Column(db.String(36), db.ForeignKey("wallets.id"), nullable=False, index=True)
-    amount = db.Column(db.Numeric(12, 2), nullable=False)
-    description = db.Column(db.String(255))
-    category = db.Column(db.String(120))
-    date = db.Column(db.Date, nullable=False)
-    created_by = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False)
-
-    original_image_url = db.Column(db.String(255))
-    ocr_raw_text = db.Column(db.Text)
-    ocr_confidence = db.Column(db.Float)
-    is_auto_categorized = db.Column(db.Boolean, default=False)
-
-    wallet = db.relationship("Wallet", back_populates="transactions")
-    creator = db.relationship("User")
-
-class OCRJob(TimestampMixin, db.Model):
-    __tablename__ = "ocr_jobs"
-    id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
-    user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False)
+class OCRJob(db.Model):
+    __tablename__ = 'ocr_jobs'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     image_path = db.Column(db.String(255), nullable=False)
-    status = db.Column(db.Enum("pending", "processing", "done", "error", name="ocr_status"), default="pending", nullable=False)
-    raw_text = db.Column(db.Text)
-    extracted_data = db.Column(db.JSON)
-    error_message = db.Column(db.Text)
+    status = db.Column(db.String(20), default='pending') # pending, processing, completed, failed
+    raw_text = db.Column(db.Text, nullable=True)
+    extracted_data = db.Column(db.JSON, nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    completed_at = db.Column(db.DateTime, nullable=True)
 
-    user = db.relationship("User")
+    # Functions
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'user_id': self.user_id,
+            'image_path': self.image_path,
+            'status': self.status,
+            'raw_text': self.raw_text,
+            'extracted_data': self.extracted_data,
+            'created_at': self.created_at.isoformat(),
+            'completed_at': self.completed_at.isoformat() if self.completed_at else None,
+        }

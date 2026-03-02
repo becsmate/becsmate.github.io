@@ -1,32 +1,23 @@
-"""SPA and static file handling."""
-from flask import send_from_directory, jsonify, request
-from pathlib import Path
+import os
+from flask import Blueprint, send_from_directory, jsonify, current_app
 
-def register_spa_routes(app):
-    """Register routes for serving the React SPA and static files."""
-    
-    @app.route("/")
-    def spa_index():
-        return send_from_directory(app.static_folder, "index.html")
+spa_bp = Blueprint('spa', __name__)
 
-    @app.route("/<path:filename>")
-    def spa_static_or_fallback(filename):
-        # Serve existing built asset
-        static_folder = Path(app.static_folder)
-        file_path = static_folder / filename
-        
-        if file_path.exists() and file_path.is_file():
-            return send_from_directory(app.static_folder, filename)
+BUILD_DIR = os.path.join(os.path.dirname(__file__), '..', '..', 'client', 'build')
 
-        # Not an API path -> let React Router handle
-        if not filename.startswith("api/"):
-            return send_from_directory(app.static_folder, "index.html")
 
-        # API 404
-        return jsonify(error="API endpoint not found"), 404
+@spa_bp.route('/', defaults={'path': ''})
+@spa_bp.route('/<path:path>')
+def serve_spa(path):
+    if path.startswith('api/'):
+        return jsonify({'error': 'Not found'}), 404
+    if path and os.path.exists(os.path.join(BUILD_DIR, path)):
+        return send_from_directory(BUILD_DIR, path)
+    return send_from_directory(BUILD_DIR, 'index.html')
 
-    @app.errorhandler(404)
-    def not_found(_):
-        if request.path.startswith("/api/"):
-            return jsonify(error="API endpoint not found"), 404
-        return send_from_directory(app.static_folder, "index.html")
+
+@spa_bp.app_errorhandler(404)
+def not_found(e):
+    if current_app.debug:
+        return jsonify({'error': 'Not found'}), 404
+    return send_from_directory(BUILD_DIR, 'index.html')
