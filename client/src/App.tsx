@@ -9,6 +9,7 @@ import OCRPage from './pages/OCRPage';
 import StatisticsPage from './pages/StatisticsPage';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
+import Register from './pages/Register';
 
 const DARK_MODE_KEY = 'darkMode';
 
@@ -31,6 +32,9 @@ function App() {
   const theme = createTheme({
     palette: {
       mode: darkMode ? 'dark' : 'light',
+      background: {
+        default: darkMode ? '#14151f' : '#d7e2f7',
+      },
       primary: { main: '#1976d2' },
       secondary: { main: '#dc004e' },
     },
@@ -54,6 +58,7 @@ function App() {
             <>
               <Route path="/" element={<LandingPage />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </>
           )}

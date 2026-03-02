@@ -7,6 +7,8 @@ import { Brightness4, Brightness7, Menu as MenuIcon } from '@mui/icons-material'
 import { Link, useLocation } from 'react-router-dom';
 import { useAuthContext } from '../contexts/AuthContext';
 
+import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
+
 interface NavigationProps {
   darkMode: boolean;
   toggleDarkMode: () => void;
@@ -16,10 +18,12 @@ const NAV_ITEMS = [
   { label: 'Dashboard', path: '/', auth: true },
   { label: 'Upload', path: '/upload', auth: true },
   { label: 'Statistics', path: '/statistics', auth: true },
+  { label: 'Login', path: '/login', auth: false },
+  { label: 'Register', path: '/register', auth: false }
 ];
 
 const Navigation: React.FC<NavigationProps> = ({ darkMode, toggleDarkMode }) => {
-  const { isAuthenticated, logout, user } = useAuthContext();
+  const { isAuthenticated, logout } = useAuthContext();
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -29,78 +33,84 @@ const Navigation: React.FC<NavigationProps> = ({ darkMode, toggleDarkMode }) => 
   const handleOpen = (e: React.MouseEvent<HTMLElement>) => setAnchorEl(e.currentTarget);
   const handleClose = () => setAnchorEl(null);
 
-  const authButton = isAuthenticated ? (
-    <Button onClick={logout} color="inherit" variant="outlined" sx={{ ml: 2 }}>
-      Logout
-    </Button>
-  ) : (
-    <Button component={Link} to="/login" color="inherit" variant="outlined" sx={{ ml: 2 }}>
-      Login
-    </Button>
-  );
-
   return (
-    <AppBar position="static" elevation={0}>
+    <AppBar position="static" elevation={0} color="transparent" sx={{ bgcolor: 'background.default', color: 'text.primary', borderBottom: 1, borderColor: 'divider' }}>
       <Toolbar>
-        <Box component={Link} to={isAuthenticated ? '/' : '/'} sx={{ display: 'flex', alignItems: 'center', mr: 2, textDecoration: 'none', color: 'inherit' }}>
-          {isAuthenticated && user ? (
-            <>
-              <img
-                src={user.profile_image_url ?? undefined}
-                alt={user.name}
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                style={{ borderRadius: '50%', width: 30, height: 30, marginRight: 8 }}
-              />
-              <Typography component={Link} to="/settings" variant="h6" sx={{ color: 'inherit', textDecoration: 'none', mr: 4, flexGrow: isMobile ? 1 : 0 }}>
-                {user.name}
-              </Typography>
-            </>
-          ) : (
-            <Typography variant="h6" sx={{ flexGrow: isMobile ? 1 : 0, mr: 4 }}>
-              Finance Tracker
+        <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+          <Box sx={{ display: { xs: 'none', md: 'flex' }, alignItems: 'center', mr: 2, textDecoration: 'none', color: 'inherit' }}>
+            <AccountBalanceWalletOutlinedIcon sx={{ mr: 1, bgcolor: "#353e8c", color: 'white', borderRadius: '30%', p: 0.5, height: 30, width: 30 }} />
+            <Typography variant="h6" component={Link} to="/" sx={{ color: 'inherit', textDecoration: 'none' }}>
+              FinanceAI
             </Typography>
-          )}
-        </Box>
+          </Box>
 
-        {!isMobile && (
-          <Box sx={{ flexGrow: 1, display: 'flex', gap: 1 }}>
-            {NAV_ITEMS.map((item) =>
-              (isAuthenticated || !item.auth) && (
-                <Button key={item.path} component={Link} to={item.path} color="inherit"
-                  variant={isActive(item.path) ? 'outlined' : 'text'}
-                  sx={{ borderColor: isActive(item.path) ? 'rgba(255,255,255,0.5)' : 'transparent' }}>
-                  {item.label}
-                </Button>
-              )
+          <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+            <IconButton color="inherit" onClick={toggleDarkMode}>
+              {darkMode ? <Brightness7 /> : <Brightness4 />}
+            </IconButton>
+
+            {!isMobile && (
+              <Box sx={{ flexGrow: 1, display: 'flex', gap: 1 }}>
+                {NAV_ITEMS.map((item) =>
+                  (isAuthenticated && item.auth) ? (
+                    <Button key={item.path} component={Link} to={item.path} color="inherit"
+                      variant={isActive(item.path) ? 'outlined' : 'text'}
+                      sx={{ borderColor: isActive(item.path) ? 'rgba(0,0,0,0.1)' : 'transparent' }}>
+                      {item.label}
+                    </Button>
+                  ) :
+                  (
+                    !isAuthenticated && !item.auth && (
+                      <Button key={item.path} component={Link} to={item.path} color="inherit"
+                        variant={isActive(item.path) ? 'outlined' : 'text'}
+                        sx={{ borderColor: isActive(item.path) ? 'rgba(0,0,0,0.1)' : 'transparent' }}>
+                        {item.label}
+                      </Button>
+                    )
+                  )
+                )}
+                {isAuthenticated && (
+                    <Button onClick={logout} color="inherit" variant="text">
+                      Logout
+                    </Button>
+                )}
+              </Box>
+            )}
+
+            {isMobile && (
+              <>
+                <IconButton size="large" aria-label="account of current user" aria-controls="menu-appbar" aria-haspopup="true" onClick={handleOpen} color="inherit" sx={{ display: { xs: 'flex', md: 'none' } }} >
+                  <MenuIcon />
+                </IconButton>
+
+                <Box sx={{ display: { xs: 'flex', md: 'none' }, alignItems: 'center', flexGrow: 1, textDecoration: 'none', color: 'inherit' }}>
+                  <AccountBalanceWalletOutlinedIcon sx={{ mr: 1, bgcolor: "#353e8c", color: 'white', borderRadius: '30%', p: 0.5, height: 30, width: 30 }} />
+                  <Typography variant="h6" component={Link} to="/" sx={{ color: 'inherit', textDecoration: 'none' }}>
+                    FinanceAI
+                  </Typography>
+                </Box>
+
+                <Menu id="menu-appbar" anchorEl={anchorEl} anchorOrigin={{ vertical: 'bottom', horizontal: 'left', }} keepMounted transformOrigin={{ vertical: 'top', horizontal: 'left', }} open={Boolean(anchorEl)} onClose={handleClose} sx={{ display: { xs: 'block', md: 'none' }, }} >
+                  {NAV_ITEMS.map((item) => {
+                    if (isAuthenticated && !item.auth) return null;
+                    if (!isAuthenticated && item.auth) return null;
+
+                    return (
+                      <MenuItem key={item.label} onClick={handleClose} component={Link} to={item.path}>
+                        <Typography textAlign="center">{item.label}</Typography>
+                      </MenuItem>
+                    )
+                  })}
+                  {isAuthenticated && (
+                    <MenuItem onClick={() => { handleClose(); logout(); }}>
+                        <Typography textAlign="center">Logout</Typography>
+                    </MenuItem>
+                  )}
+                </Menu>
+              </>
             )}
           </Box>
-        )}
-
-        {isMobile && (
-          <>
-            <Button id="nav-menu-button" aria-controls={anchorEl ? 'nav-menu' : undefined}
-              aria-haspopup="true" aria-expanded={!!anchorEl}
-              variant="outlined" color="inherit" onClick={handleOpen}
-              sx={{ minWidth: 50, p: 0.6 }}>
-              <MenuIcon />
-            </Button>
-            <Menu id="nav-menu" anchorEl={anchorEl} open={!!anchorEl} onClose={handleClose}>
-              {NAV_ITEMS.map((item) =>
-                (isAuthenticated || !item.auth) && (
-                  <MenuItem key={item.path} component={Link} to={item.path} onClick={handleClose}>
-                    {item.label}
-                  </MenuItem>
-                )
-              )}
-              <Box sx={{ px: 1 }}>{authButton}</Box>
-            </Menu>
-          </>
-        )}
-
-        <IconButton color="inherit" onClick={toggleDarkMode}>
-          {darkMode ? <Brightness7 /> : <Brightness4 />}
-        </IconButton>
-        {!isMobile && authButton}
+        </Box>
       </Toolbar>
     </AppBar>
   );
