@@ -115,9 +115,11 @@ export default function StatisticsPage() {
                   <Box sx={{ mt: 4 }}>
                     <Typography variant="subtitle1" gutterBottom>Spending by Category</Typography>
                     <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
+                        <PieChart>
                         <Pie
-                          data={categories}
+                          data={categories
+                          .filter(c => c.total < 0)
+                          .map(c => ({ ...c, total: Math.abs(c.total) }))}
                           dataKey="total"
                           nameKey="category"
                           cx="50%"
@@ -125,11 +127,13 @@ export default function StatisticsPage() {
                           outerRadius={80}
                           label={({ category }) => category}
                         >
-                          {categories.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                          {categories
+                          .filter(c => c.total < 0)
+                          .map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                         </Pie>
-                        <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                        <Tooltip formatter={(v: number) => formatCurrency(-v)} />
                         <Legend wrapperStyle={{ fontSize: '12px' }} />
-                      </PieChart>
+                        </PieChart>
                     </ResponsiveContainer>
                   </Box>
                 )}
