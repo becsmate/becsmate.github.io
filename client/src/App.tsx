@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme, CssBaseline, useMediaQuery } from '@mui/material';
 import { useAuthContext } from './contexts/AuthContext';
-import Navigation from './components/Navigation';
+import Navigation from './components/navigation/Navigation';
 import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 import OCRPage from './pages/OCRPage';
@@ -33,7 +33,8 @@ function App() {
     palette: {
       mode: darkMode ? 'dark' : 'light',
       background: {
-        default: darkMode ? '#14151f' : '#d7e2f7',
+        paper: darkMode ? '#151728' : '#f0f4ff',
+        default: darkMode ? '#0d0f1c' : '#d7e2f7',
       },
       primary: { main: '#1976d2' },
       secondary: { main: '#dc004e' },
