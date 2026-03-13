@@ -10,9 +10,21 @@ transactions_bp = Blueprint("transactions", __name__)
 
 def _get_wallet_or_abort(wallet_id, user_id):
     wallet = db.session.get(Wallet, wallet_id)
-    if not wallet or wallet.owner_id != user_id:
+    if not wallet or not _can_access_wallet(wallet, user_id):
         return None
     return wallet
+
+
+def _can_access_wallet(wallet, user_id):
+    if not wallet:
+        return False
+    if wallet.owner_id == user_id:
+        return True
+
+    members = wallet.members
+    if hasattr(members, "filter_by"):
+        return members.filter_by(id=user_id).first() is not None
+    return any(m.id == user_id for m in members)
 
 
 @transactions_bp.route("/api/wallets/<string:wallet_id>/transactions", methods=["GET"])
