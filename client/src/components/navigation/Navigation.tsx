@@ -8,6 +8,7 @@ import {
   Box,
   Menu,
   MenuItem,
+  Badge,
 } from "@mui/material";
 import { Link } from "react-router-dom";
 import { useAuthContext } from "../../contexts/AuthContext";
@@ -17,7 +18,9 @@ import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalance
 import Person2OutlinedIcon from "@mui/icons-material/Person2Outlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
+import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
 import UserProfileAvatar from "./Avatar";
+import { useWalletInvitations } from "../../services/walletService";
 
 interface NavigationProps {
   darkMode: boolean;
@@ -29,7 +32,9 @@ const Navigation: React.FC<NavigationProps> = ({
   toggleDarkMode,
 }) => {
   const { isAuthenticated, logout, user } = useAuthContext();
+  const { invitations } = useWalletInvitations("pending", isAuthenticated);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+  const pendingInvitationCount = invitations.length;
 
   const handleOpen = (e: React.MouseEvent<HTMLElement>) =>
     setAnchorEl(e.currentTarget);
@@ -93,6 +98,21 @@ const Navigation: React.FC<NavigationProps> = ({
             <Box>
               {/* add scan receipt button here */}
               <IconButton
+                color="inherit"
+                component={Link}
+                to="/wallets/invitations"
+                aria-label="wallet invitations"
+              >
+                <Badge
+                  badgeContent={pendingInvitationCount}
+                  color="error"
+                  max={99}
+                >
+                  <NotificationsOutlinedIcon />
+                </Badge>
+              </IconButton>
+
+              <IconButton
                 id="account-button"
                 size="large"
                 aria-label="account of current user"
@@ -132,6 +152,14 @@ const Navigation: React.FC<NavigationProps> = ({
                 <MenuItem onClick={handleClose} component={Link} to="/settings">
                   <SettingsOutlinedIcon sx={{ mr: 2 }} />
                   <Typography textAlign="center">Settings</Typography>
+                </MenuItem>
+                <MenuItem
+                  onClick={handleClose}
+                  component={Link}
+                  to="/wallets/invitations"
+                >
+                  <AccountBalanceWalletOutlinedIcon sx={{ mr: 2 }} />
+                  <Typography textAlign="center">Wallet Social</Typography>
                 </MenuItem>
                 <MenuItem
                   onClick={() => {
