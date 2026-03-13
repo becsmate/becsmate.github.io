@@ -36,6 +36,7 @@ interface RecentTransactionsTableProps {
   categoryFilter: string;
   onCategoryFilterChange: (value: string) => void;
   onAddClick?: () => void;
+  width?: string | number;
 }
 
 const categoryChipSx: Record<string, any> = {
@@ -90,6 +91,7 @@ const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = ({
   categoryFilter,
   onCategoryFilterChange,
   onAddClick,
+  width = "75%",
 }) => {
   const categories = Array.from(
     new Set(transactions.map((t) => t.category ?? "Other")),
@@ -126,7 +128,7 @@ const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = ({
         borderRadius: 3,
         p: 0,
         bgcolor: "background.paper",
-        width: "75%",
+        width,
         overflow: "hidden",
       }}
     >

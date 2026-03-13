@@ -14,6 +14,7 @@ import {
   Stack,
   TextField,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import { useTransactions, useWallets, walletApi } from "../services/walletService";
 import { useStatistics } from "../services/statisticsService";
 import SummaryCards from "../components/dashboard/SummaryCards";
@@ -21,8 +22,11 @@ import IncomeExpensesChart from "../components/dashboard/IncomeExpensesChart";
 import CategoryDonutChart from "../components/dashboard/CategoryDonutChart";
 import RecentTransactionsTable from "../components/dashboard/RecentTransactionsTable";
 import WalletsPanel from "../components/dashboard/WalletsPanel";
+import AddTransactionDialog from "../components/dashboard/AddTransactionDialog";
+import QuickUploadCard from "../components/dashboard/QuickUploadCard";
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const { wallets, error: walletsError, refetch } = useWallets();
   const [walletId, setWalletId] = useState<string>("");
   const [createOpen, setCreateOpen] = useState(false);
@@ -36,10 +40,13 @@ const Dashboard: React.FC = () => {
     "all",
   );
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [addTxOpen, setAddTxOpen] = useState(false);
+  const [addTxBusy, setAddTxBusy] = useState(false);
+  const [addTxError, setAddTxError] = useState<string | null>(null);
 
-  const { transactions = [] } = useTransactions(walletId);
+  const { transactions = [], refetch: refetchTransactions } = useTransactions(walletId);
 
-  const { userSummary, userMonthly, categories } = useStatistics(
+  const { userSummary, userMonthly, categories, refetch: refetchStatistics } = useStatistics(
     walletId || null,
   );
 
@@ -87,6 +94,41 @@ const Dashboard: React.FC = () => {
   const monthWithYear = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, "0")}`;
   const currentMonthData = userMonthly.find((m) => m.month === monthWithYear);
 
+  const handleAddTransaction = async (payload: {
+    amount: number;
+    category: string;
+    date: string;
+    description?: string;
+    merchant_name?: string;
+    currency?: string;
+  }) => {
+    if (!walletId) {
+      setAddTxError("Please select a wallet first.");
+      return;
+    }
+
+    setAddTxError(null);
+    setAddTxBusy(true);
+    try {
+      await walletApi.createTransaction(walletId, payload);
+      await Promise.all([refetchTransactions(), refetchStatistics()]);
+      setAddTxOpen(false);
+    } catch (e: any) {
+      setAddTxError(e.response?.data?.error ?? "Failed to add transaction");
+    } finally {
+      setAddTxBusy(false);
+    }
+  };
+
+  const openOcrUpload = (file?: File) => {
+    navigate("/upload", {
+      state: {
+        quickFile: file,
+        prefillWalletId: walletId || undefined,
+      },
+    });
+  };
+
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 4, py: 4 }}>
       <Box sx={{ display: "flex", justifyContent: "center", width: "100%" }}>
@@ -120,17 +162,45 @@ const Dashboard: React.FC = () => {
 
       {/* table */}
       <Box sx={{ display: "flex", justifyContent: "center", width: "100%" }}>
-        <RecentTransactionsTable
-          transactions={transactions}
-          search={search}
-          onSearchChange={setSearch}
-          typeFilter={typeFilter}
-          onTypeFilterChange={setTypeFilter}
-          categoryFilter={categoryFilter}
-          onCategoryFilterChange={setCategoryFilter}
-          onAddClick={() => {}}
-        />
+        <Box
+          sx={{
+            display: "flex",
+            gap: 2,
+            width: "75%",
+            alignItems: "stretch",
+          }}
+        >
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <RecentTransactionsTable
+              transactions={transactions}
+              search={search}
+              onSearchChange={setSearch}
+              typeFilter={typeFilter}
+              onTypeFilterChange={setTypeFilter}
+              categoryFilter={categoryFilter}
+              onCategoryFilterChange={setCategoryFilter}
+              onAddClick={() => {
+                setAddTxError(null);
+                setAddTxOpen(true);
+              }}
+              width="100%"
+            />
+          </Box>
+
+          <QuickUploadCard
+            onFileSelected={(file) => openOcrUpload(file)}
+            onOpenUploadPage={() => openOcrUpload()}
+          />
+        </Box>
       </Box>
+
+      <AddTransactionDialog
+        open={addTxOpen}
+        onClose={() => setAddTxOpen(false)}
+        onSubmit={handleAddTransaction}
+        busy={addTxBusy}
+        error={addTxError}
+      />
 
       <Dialog open={createOpen} onClose={() => setCreateOpen(false)} fullWidth maxWidth="xs">
         <DialogTitle>Create Wallet</DialogTitle>
