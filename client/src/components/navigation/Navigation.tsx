@@ -100,7 +100,7 @@ const Navigation: React.FC<NavigationProps> = ({
               <IconButton
                 color="inherit"
                 component={Link}
-                to="/wallets/invitations"
+                to="/wallets/manage"
                 aria-label="wallet invitations"
               >
                 <Badge
@@ -156,7 +156,7 @@ const Navigation: React.FC<NavigationProps> = ({
                 <MenuItem
                   onClick={handleClose}
                   component={Link}
-                  to="/wallets/invitations"
+                  to="/wallets/manage"
                 >
                   <AccountBalanceWalletOutlinedIcon sx={{ mr: 2 }} />
                   <Typography textAlign="center">Wallet Social</Typography>

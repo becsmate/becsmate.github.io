@@ -10,8 +10,7 @@ import StatisticsPage from './pages/StatisticsPage';
 import Settings from './pages/Settings';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import WalletInvitationsPage from './pages/WalletInvitationsPage';
-import WalletSocialPage from './pages/WalletSocialPage';
+import WalletManagePage from './pages/WalletManagePage';
 
 const DARK_MODE_KEY = 'darkMode';
 
@@ -55,8 +54,9 @@ function App() {
               <Route path="/upload" element={<OCRPage />} />
               <Route path="/statistics" element={<StatisticsPage />} />
               <Route path="/settings" element={<Settings />} />
-              <Route path="/wallets/invitations" element={<WalletInvitationsPage />} />
-              <Route path="/wallets/:walletId/social" element={<WalletSocialPage />} />
+              <Route path="/wallets/manage" element={<WalletManagePage />} />
+              <Route path="/wallets/invitations" element={<Navigate to="/wallets/manage" replace />} />
+              <Route path="/wallets/:walletId/social" element={<Navigate to="/wallets/manage" replace />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </>
           ) : (

@@ -26,6 +26,14 @@ def _get_wallet_or_404(wallet_id, user_id, require_owner=False):
     return None
 
 
+def _serialize_wallet_for_list(wallet, is_owner):
+    data = wallet.to_dict()
+    data["is_owner"] = is_owner
+    data["balance"] = round(sum(float(t.amount) for t in wallet.transactions), 2)
+    data["member_count"] = (wallet.members.count() + 1) if wallet.type == "group" else 0
+    return data
+
+
 @wallets_bp.route("", methods=["GET"])
 @jwt_required()
 def get_wallets():
@@ -39,14 +47,10 @@ def get_wallets():
 
     results = []
     for w in owned_wallets:
-        d = w.to_dict()
-        d["is_owner"] = True
-        results.append(d)
+        results.append(_serialize_wallet_for_list(w, True))
 
     for w in shared_wallets:
-        d = w.to_dict()
-        d["is_owner"] = False
-        results.append(d)
+        results.append(_serialize_wallet_for_list(w, False))
 
     return jsonify({"wallets": results})
 

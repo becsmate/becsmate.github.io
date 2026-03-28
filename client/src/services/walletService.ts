@@ -7,6 +7,8 @@ export interface Wallet {
   type: 'personal' | 'group';
   owner_id: string;
   is_owner?: boolean;
+  balance?: number;
+  member_count?: number;
   created_at: string;
   updated_at: string;
 }
