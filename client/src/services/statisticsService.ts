@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
-import { apiClient } from './apiClient';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { apiClient } from "./apiClient";
 
-export interface WalletSummary {
+export interface Summary {
   total: number;
   income: number;
   expenses: number;
@@ -11,6 +11,8 @@ export interface WalletSummary {
 export interface MonthlyData {
   month: string;
   total: number;
+  expenses: number;
+  income: number;
 }
 
 export interface CategoryData {
@@ -19,50 +21,104 @@ export interface CategoryData {
 }
 
 export const statisticsApi = {
-  getSummary: async (walletId: string): Promise<WalletSummary> => {
-    const { data } = await apiClient.get<WalletSummary>(`/statistics/${walletId}/summary`);
+  getSummary: async (walletId: string): Promise<Summary> => {
+    const { data } = await apiClient.get<Summary>(
+      `/statistics/${walletId}/summary`,
+    );
     return data;
   },
 
   getMonthly: async (walletId: string): Promise<MonthlyData[]> => {
-    const { data } = await apiClient.get<{ monthly: MonthlyData[] }>(`/statistics/${walletId}/monthly`);
+    const { data } = await apiClient.get<{ monthly: MonthlyData[] }>(
+      `/statistics/${walletId}/monthly`,
+    );
     return data.monthly;
   },
 
   getCategories: async (walletId: string): Promise<CategoryData[]> => {
-    const { data } = await apiClient.get<{ categories: CategoryData[] }>(`/statistics/${walletId}/categories`);
+    const { data } = await apiClient.get<{ categories: CategoryData[] }>(
+      `/statistics/${walletId}/categories`,
+    );
     return data.categories;
+  },
+
+  getUserSummary: async (): Promise<Summary> => {
+    const { data } = await apiClient.get<Summary>("/statistics/summary");
+    return data;
+  },
+
+  getUserMonthly: async (): Promise<MonthlyData[]> => {
+    const { data } = await apiClient.get<{ monthly: MonthlyData[] }>(
+      "/statistics/monthly",
+    );
+    return data.monthly;
   },
 };
 
 export function useStatistics(walletId: string | null) {
-  const [summary, setSummary] = useState<WalletSummary | null>(null);
+  const [summary, setSummary] = useState<Summary | null>(null);
   const [monthly, setMonthly] = useState<MonthlyData[]>([]);
+  const [userSummary, setUserSummary] = useState<Summary | null>(null);
+  const [userMonthly, setUserMonthly] = useState<MonthlyData[]>([]);
   const [categories, setCategories] = useState<CategoryData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const requestCounterRef = useRef(0);
 
   const fetch = useCallback(async () => {
-    if (!walletId) return;
+    requestCounterRef.current += 1;
+    const requestId = requestCounterRef.current;
+
     setLoading(true);
     setError(null);
     try {
-      const [s, m, c] = await Promise.all([
-        statisticsApi.getSummary(walletId),
-        statisticsApi.getMonthly(walletId),
-        statisticsApi.getCategories(walletId),
+      const walletRequests = walletId
+        ? [
+            statisticsApi.getSummary(walletId),
+            statisticsApi.getMonthly(walletId),
+            statisticsApi.getCategories(walletId),
+          ]
+        : [null, [], []];
+
+      const [s, m, c, us, um] = await Promise.all([
+        ...walletRequests,
+        statisticsApi.getUserSummary(),
+        statisticsApi.getUserMonthly(),
       ]);
-      setSummary(s);
-      setMonthly(m);
-      setCategories(c);
+
+      if (requestId !== requestCounterRef.current) {
+        return;
+      }
+
+      setSummary(s as Summary | null);
+      setMonthly(m as MonthlyData[]);
+      setCategories(c as CategoryData[]);
+      setUserSummary(us as Summary | null);
+      setUserMonthly(um as MonthlyData[]);
     } catch (e: any) {
-      setError(e.response?.data?.error ?? 'Failed to load statistics');
+      if (requestId !== requestCounterRef.current) {
+        return;
+      }
+      setError(e.response?.data?.error ?? "Failed to load statistics");
     } finally {
-      setLoading(false);
+      if (requestId === requestCounterRef.current) {
+        setLoading(false);
+      }
     }
   }, [walletId]);
 
-  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => {
+    fetch();
+  }, [fetch]);
 
-  return { summary, monthly, categories, loading, error, refetch: fetch };
+  return {
+    summary,
+    monthly,
+    userSummary,
+    userMonthly,
+    categories,
+    loading,
+    error,
+    refetch: fetch,
+  };
 }
