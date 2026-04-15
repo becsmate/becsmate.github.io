@@ -3,7 +3,7 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from extensions import db
-from models import OCRJob, Transaction
+from models import OCRJob, Transaction, Wallet
 
 ocr_bp = Blueprint('ocr', __name__, url_prefix='/api/ocr')
 
@@ -12,6 +12,18 @@ ALLOWED_EXTENSIONS = {'jpg', 'jpeg', 'png', 'pdf'}
 
 def _allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def _can_access_wallet(wallet, user_id):
+    if not wallet:
+        return False
+    if wallet.owner_id == user_id:
+        return True
+
+    members = wallet.members
+    if hasattr(members, 'filter_by'):
+        return members.filter_by(id=user_id).first() is not None
+    return any(m.id == user_id for m in members)
 
 
 @ocr_bp.route('/process', methods=['POST'])
@@ -101,13 +113,19 @@ def confirm_receipt():
     if not wallet_id or amount is None or not category or not date_str:
         return jsonify({'error': 'wallet_id, amount, category and date are required'}), 400
 
+    wallet = db.session.get(Wallet, wallet_id)
+    if not _can_access_wallet(wallet, user_id):
+        return jsonify({'error': 'Wallet not found'}), 404
+
+    description = (data.get('description') or '').strip() or data.get('merchant_name') or 'OCR receipt'
+
     transaction = Transaction(
         wallet_id=wallet_id,
         amount=float(amount),
         currency=data.get('currency', 'HUF'),
         category=category,
         date=datetime.fromisoformat(date_str),
-        description=data.get('description'),
+        description=description,
         merchant_name=data.get('merchant_name'),
         original_image_url=data.get('original_image_url'),
         ocr_raw_text=data.get('ocr_raw_text'),

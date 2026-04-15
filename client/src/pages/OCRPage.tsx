@@ -1,19 +1,25 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   Container, Typography, Box, Button, Paper, TextField, Alert,
   CircularProgress, Select, MenuItem, FormControl, InputLabel, Divider,
 } from '@mui/material';
 import { CloudUpload } from '@mui/icons-material';
+import { useLocation } from 'react-router-dom';
 import { useOCR, ocrApi, type OCRJob } from '../services/ocrService';
 import { useWallets } from '../services/walletService';
 import { formatDate } from '../utils';
+import {
+  DEFAULT_TRANSACTION_CATEGORY,
+  TRANSACTION_CATEGORIES,
+} from '../constants/transactionCategories';
 
-const CATEGORIES = ['Food', 'Transport', 'Shopping', 'Health', 'Entertainment', 'Utilities', 'Other'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 export default function OCRPage() {
+  const location = useLocation();
   const { processFile, loading, error } = useOCR();
   const { wallets } = useWallets();
+  const quickUploadHandled = useRef(false);
 
   const [job, setJob] = useState<OCRJob | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
@@ -24,12 +30,10 @@ export default function OCRPage() {
   const [merchant, setMerchant] = useState('');
   const [amount, setAmount] = useState('');
   const [date, setDate] = useState('');
-  const [category, setCategory] = useState('Other');
+  const [category, setCategory] = useState(DEFAULT_TRANSACTION_CATEGORY);
   const [walletId, setWalletId] = useState<string | ''>('');
 
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const processSelectedFile = async (file: File) => {
     setFileError(null);
     setJob(null);
     setConfirmed(false);
@@ -49,6 +53,30 @@ export default function OCRPage() {
     }
     setJob(result);
   };
+
+  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    await processSelectedFile(file);
+  };
+
+  useEffect(() => {
+    const state = (location.state as {
+      quickFile?: File;
+      prefillWalletId?: string;
+    } | null) ?? null;
+
+    if (!state) return;
+
+    if (state.prefillWalletId && !walletId) {
+      setWalletId(state.prefillWalletId);
+    }
+
+    if (state.quickFile && !quickUploadHandled.current) {
+      quickUploadHandled.current = true;
+      processSelectedFile(state.quickFile);
+    }
+  }, [location.state, walletId]);
 
   const handleConfirm = async () => {
     if (!walletId) return setConfirmError('Select a wallet');
@@ -97,7 +125,7 @@ export default function OCRPage() {
             <FormControl fullWidth>
               <InputLabel>Category</InputLabel>
               <Select label="Category" value={category} onChange={(e) => setCategory(e.target.value)}>
-                {CATEGORIES.map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
+                {TRANSACTION_CATEGORIES.map((c) => <MenuItem key={c} value={c}>{c}</MenuItem>)}
               </Select>
             </FormControl>
             <FormControl fullWidth required>

@@ -6,8 +6,41 @@ export interface Wallet {
   name: string;
   type: 'personal' | 'group';
   owner_id: string;
+  is_owner?: boolean;
+  balance?: number;
+  member_count?: number;
   created_at: string;
   updated_at: string;
+}
+
+export interface WalletMember {
+  id: string;
+  email: string;
+  name: string;
+  profile_image_url: string | null;
+  created_at: string;
+  role: 'owner' | 'member';
+}
+
+export interface WalletInvitation {
+  id: string;
+  wallet_id: string;
+  invited_user_id: string;
+  invited_by_user_id: string;
+  status: 'pending' | 'accepted' | 'declined';
+  responded_at: string | null;
+  created_at: string;
+  updated_at: string;
+  wallet?: {
+    id: string;
+    name: string;
+    type: 'personal' | 'group';
+  } | null;
+  invited_by?: {
+    id: string;
+    name: string;
+    email: string;
+  } | null;
 }
 
 export interface Transaction {
@@ -71,6 +104,37 @@ export const walletApi = {
     await apiClient.delete(`/wallets/${id}`);
   },
 
+  getWalletMembers: async (walletId: string): Promise<WalletMember[]> => {
+    const { data } = await apiClient.get<{ members: WalletMember[] }>(`/wallets/${walletId}/members`);
+    return data.members;
+  },
+
+  inviteMember: async (walletId: string, email: string): Promise<void> => {
+    await apiClient.post(`/wallets/${walletId}/members`, { email });
+  },
+
+  removeMember: async (walletId: string, memberId: string): Promise<void> => {
+    await apiClient.delete(`/wallets/${walletId}/members/${memberId}`);
+  },
+
+  getInvitations: async (
+    status: 'pending' | 'accepted' | 'declined' | 'all' = 'pending'
+  ): Promise<WalletInvitation[]> => {
+    const { data } = await apiClient.get<{ invitations: WalletInvitation[] }>(
+      '/wallets/invitations',
+      { params: { status } }
+    );
+    return data.invitations;
+  },
+
+  acceptInvitation: async (invitationId: string): Promise<void> => {
+    await apiClient.post(`/wallets/invitations/${invitationId}/accept`);
+  },
+
+  declineInvitation: async (invitationId: string): Promise<void> => {
+    await apiClient.post(`/wallets/invitations/${invitationId}/decline`);
+  },
+
   getTransactions: async (walletId: string, filters?: TransactionFilters): Promise<Transaction[]> => {
     const { data } = await apiClient.get<{ transactions: Transaction[] }>(
       `/wallets/${walletId}/transactions`,
@@ -131,6 +195,13 @@ export function useTransactions(walletId: string, filters?: TransactionFilters) 
   const [error, setError] = useState<string | null>(null);
 
   const fetch = useCallback(async () => {
+    if (!walletId) {
+      setTransactions([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     try {
       setLoading(true);
       setTransactions(await walletApi.getTransactions(walletId, filters));
@@ -144,4 +215,63 @@ export function useTransactions(walletId: string, filters?: TransactionFilters) 
   useEffect(() => { fetch(); }, [fetch]);
 
   return { transactions, loading, error, refetch: fetch };
+}
+
+export function useWalletInvitations(
+  status: 'pending' | 'accepted' | 'declined' | 'all' = 'pending',
+  enabled = true
+) {
+  const [invitations, setInvitations] = useState<WalletInvitation[]>([]);
+  const [loading, setLoading] = useState(enabled);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetch = useCallback(async () => {
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setInvitations(await walletApi.getInvitations(status));
+    } catch (e: any) {
+      setError(e.response?.data?.error ?? 'Failed to load invitations');
+    } finally {
+      setLoading(false);
+    }
+  }, [status, enabled]);
+
+  useEffect(() => {
+    fetch();
+  }, [fetch]);
+
+  return { invitations, loading, error, refetch: fetch };
+}
+
+export function useWalletMembers(walletId: string, enabled = true) {
+  const [members, setMembers] = useState<WalletMember[]>([]);
+  const [loading, setLoading] = useState(enabled);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetch = useCallback(async () => {
+    if (!enabled) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setMembers(await walletApi.getWalletMembers(walletId));
+    } catch (e: any) {
+      setError(e.response?.data?.error ?? 'Failed to load wallet members');
+    } finally {
+      setLoading(false);
+    }
+  }, [walletId, enabled]);
+
+  useEffect(() => {
+    fetch();
+  }, [fetch]);
+
+  return { members, loading, error, refetch: fetch };
 }
