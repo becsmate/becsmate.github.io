@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Container, Typography } from "@mui/material";
+import { Box, Typography, useTheme } from "@mui/material";
 import Icon from "@mdi/react";
 import { formatCurrency } from "../../utils";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
@@ -27,6 +27,7 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({
   userSummary,
   currentMonthData,
 }) => {
+  const theme = useTheme();
   const income = userSummary?.income ?? 0;
   const expensesAbs = Math.abs(userSummary?.expenses ?? 0);
   const savingsRate = income > 0 ? ((income - expensesAbs) / income) * 100 : 0;
@@ -44,26 +45,42 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({
   const cardSx = {
     border: 1,
     borderColor: "divider",
-    borderRadius: 5,
-    p: 3,
+    borderRadius: 4,
+    p: { xs: 2, sm: 3 },
     bgcolor: "background.paper",
-    width: "25%",
     display: "flex",
     flexDirection: "row",
-    gap: 2,
+    gap: { xs: 1.5, sm: 2 },
     justifyContent: "space-between",
+    minWidth: 0,
+  };
+
+  const iconBgByTone = {
+    blue: theme.palette.mode === "dark" ? "rgba(69, 83, 211, 0.18)" : "rgba(69, 83, 211, 0.12)",
+    teal: theme.palette.mode === "dark" ? "rgba(47, 198, 183, 0.18)" : "rgba(47, 198, 183, 0.12)",
+    maroon: theme.palette.mode === "dark" ? "rgba(127, 29, 29, 0.2)" : "rgba(127, 29, 29, 0.12)",
   };
 
   return (
     <Box
-      sx={{ display: "flex", gap: 2, py: 4, maxWidth: "75%", minWidth: "75%" }}
+      sx={{
+        display: "grid",
+        gridTemplateColumns: {
+          xs: "1fr",
+          sm: "repeat(2, minmax(0, 1fr))",
+          lg: "repeat(4, minmax(0, 1fr))",
+        },
+        gap: 2,
+        width: { xs: "100%", xl: "75%" },
+        mx: "auto",
+      }}
     >
-      <Container sx={cardSx}>
+      <Box sx={cardSx}>
         <Box>
           <Typography sx={{ color: "text.secondary" }}>
             Total Balance
           </Typography>
-          <Typography variant="h5" color="text.primary">
+          <Typography variant="h5" color="text.primary" sx={{ fontSize: { xs: 24, sm: 28 } }}>
             {formatCurrency(
               (userSummary?.income ?? 0) + (userSummary?.expenses ?? 0),
             )}
@@ -76,23 +93,23 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({
           <Box
             sx={{
               display: "inline-flex",
-              p: 0.75,
+              p: 1,
               borderRadius: 2,
-              bgcolor: "#191d3b",
+              bgcolor: iconBgByTone.blue,
               color: "#4553d3",
             }}
           >
             <AttachMoneyIcon />
           </Box>
         </Box>
-      </Container>
+      </Box>
 
-      <Container sx={cardSx}>
+      <Box sx={cardSx}>
         <Box>
           <Typography sx={{ color: "text.secondary" }}>
             Monthly Income
           </Typography>
-          <Typography variant="h5" color="text.primary">
+          <Typography variant="h5" color="text.primary" sx={{ fontSize: { xs: 24, sm: 28 } }}>
             {formatCurrency(currentMonthData?.income ?? 0)}
           </Typography>
           <Typography sx={{ color: "text.secondary" }}>
@@ -103,23 +120,23 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({
           <Box
             sx={{
               display: "inline-flex",
-              p: 0.75,
+              p: 1,
               borderRadius: 2,
-              bgcolor: "#172938",
+              bgcolor: iconBgByTone.teal,
               color: "#2fc6b7",
             }}
           >
             <SouthWestIcon />
           </Box>
         </Box>
-      </Container>
+      </Box>
 
-      <Container sx={cardSx}>
+      <Box sx={cardSx}>
         <Box>
           <Typography sx={{ color: "text.secondary" }}>
             Monthly Spending
           </Typography>
-          <Typography variant="h5" color="text.primary">
+          <Typography variant="h5" color="text.primary" sx={{ fontSize: { xs: 24, sm: 28 } }}>
             {formatCurrency(-(currentMonthData?.expenses ?? 0))}
           </Typography>
           <Typography sx={{ color: "text.secondary" }}>
@@ -130,23 +147,23 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({
           <Box
             sx={{
               display: "inline-flex",
-              p: 0.75,
+              p: 1,
               borderRadius: 2,
-              bgcolor: "#1f1828",
+              bgcolor: iconBgByTone.maroon,
               color: "#7f1d1d",
             }}
           >
             <MovingSharpIcon />
           </Box>
         </Box>
-      </Container>
+      </Box>
 
-      <Container sx={cardSx}>
+      <Box sx={cardSx}>
         <Box>
           <Typography sx={{ color: "text.secondary" }}>
             Budget Health
           </Typography>
-          <Typography variant="h5" color={budgetHealth.status.color}>
+          <Typography variant="h5" color={budgetHealth.status.color} sx={{ fontSize: { xs: 24, sm: 28 } }}>
             {budgetHealth.percent.toFixed(0)}%
           </Typography>
           <Typography sx={{ color: "text.secondary" }}>
@@ -157,16 +174,16 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({
           <Box
             sx={{
               display: "inline-flex",
-              p: 0.75,
+              p: 1,
               borderRadius: 2,
-              bgcolor: "#172938",
+              bgcolor: iconBgByTone.teal,
               color: "#2fc6b7",
             }}
           >
             <Icon path={mdiBullseye} size={1} color="currentColor" />
           </Box>
         </Box>
-      </Container>
+      </Box>
     </Box>
   );
 };

@@ -60,8 +60,13 @@ const WalletsPanel: React.FC<WalletsPanelProps> = ({
   const currentUserId = (user as { id?: string } | null)?.id;
 
   const handleWalletClick = (id: string) => {
+    if (id === walletId) {
+      setDetailWalletId(id);
+      return;
+    }
+
     onWalletChange(id);
-    setDetailWalletId(id);
+    setDetailWalletId(null);
   };
 
   const closeDetails = () => {
@@ -87,10 +92,10 @@ const WalletsPanel: React.FC<WalletsPanelProps> = ({
           border: 1,
           borderColor: "divider",
           borderRadius: 5,
-          p: 3,
+          p: { xs: 2, sm: 3 },
           bgcolor: "background.paper",
-          width: "75%",
-          minWidth: "75%",
+          width: { xs: "100%", xl: "75%" },
+          minWidth: 0,
         }}
       >
         <Stack spacing={2}>
@@ -112,7 +117,7 @@ const WalletsPanel: React.FC<WalletsPanelProps> = ({
                 component={Link}
                 to="/wallets/manage"
                 startIcon={<SettingsOutlinedIcon />}
-                sx={{ textTransform: "none", borderRadius: 2 }}
+                sx={{ textTransform: "none", borderRadius: 2, width: { xs: "100%", sm: "auto" } }}
               >
                 Manage
               </Button>
@@ -120,7 +125,7 @@ const WalletsPanel: React.FC<WalletsPanelProps> = ({
                 variant="contained"
                 onClick={onCreateWallet}
                 startIcon={<AddIcon />}
-                sx={{ textTransform: "none", borderRadius: 2 }}
+                sx={{ textTransform: "none", borderRadius: 2, whiteSpace: "nowrap", width: { xs: "100%", sm: "auto" } }}
               >
                 New Wallet
               </Button>

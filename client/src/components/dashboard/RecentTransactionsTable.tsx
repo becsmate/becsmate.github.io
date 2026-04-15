@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Chip,
   Container,
   IconButton,
   InputBase,
+  Menu,
   MenuItem,
   Select,
   Typography,
@@ -36,6 +37,8 @@ interface RecentTransactionsTableProps {
   categoryFilter: string;
   onCategoryFilterChange: (value: string) => void;
   onAddClick?: () => void;
+  onEditTransaction?: (transaction: Transaction) => void;
+  onDeleteTransaction?: (transaction: Transaction) => void;
   width?: string | number;
 }
 
@@ -91,8 +94,37 @@ const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = ({
   categoryFilter,
   onCategoryFilterChange,
   onAddClick,
+  onEditTransaction,
+  onDeleteTransaction,
   width = "75%",
 }) => {
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  const [menuTransaction, setMenuTransaction] = useState<Transaction | null>(null);
+
+  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>, transaction: Transaction) => {
+    setMenuAnchor(event.currentTarget);
+    setMenuTransaction(transaction);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchor(null);
+    setMenuTransaction(null);
+  };
+
+  const handleEdit = () => {
+    if (menuTransaction && onEditTransaction) {
+      onEditTransaction(menuTransaction);
+    }
+    handleMenuClose();
+  };
+
+  const handleDelete = () => {
+    if (menuTransaction && onDeleteTransaction) {
+      onDeleteTransaction(menuTransaction);
+    }
+    handleMenuClose();
+  };
+
   const categories = Array.from(
     new Set(transactions.map((t) => t.category ?? "Other")),
   );
@@ -130,28 +162,39 @@ const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = ({
         bgcolor: "background.paper",
         width,
         overflow: "hidden",
+        minWidth: 0,
       }}
     >
       <Box
         sx={{
-          px: 3,
-          py: 2.5,
+          px: { xs: 2, sm: 3 },
+          py: { xs: 2, sm: 2.5 },
           borderBottom: 1,
           borderColor: "divider",
           display: "flex",
-          alignItems: "center",
+          alignItems: { xs: "stretch", md: "center" },
+          flexDirection: { xs: "column", md: "row" },
           justifyContent: "space-between",
           gap: 2,
         }}
       >
         <Typography
           variant="h6"
-          sx={{ fontSize: 28, fontWeight: 700, color: "text.primary" }}
+          sx={{ fontSize: { xs: 22, sm: 28 }, fontWeight: 700, color: "text.primary" }}
         >
           Recent Transactions
         </Typography>
 
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))", lg: "minmax(220px, 1.4fr) auto auto auto" },
+            alignItems: "center",
+            gap: 1,
+            width: "100%",
+            maxWidth: { md: 760 },
+          }}
+        >
           <Box
             sx={{
               display: "flex",
@@ -161,7 +204,7 @@ const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = ({
               border: 1,
               borderColor: "divider",
               bgcolor: "background.default",
-              minWidth: 220,
+              minWidth: 0,
               height: 40,
             }}
           >
@@ -179,9 +222,10 @@ const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = ({
             value={typeFilter}
             onChange={(e) => onTypeFilterChange(e.target.value as any)}
             sx={{
-              minWidth: 120,
+              minWidth: 0,
               borderRadius: 2,
               bgcolor: "background.default",
+              height: 40,
             }}
           >
             <MenuItem value="all">All Types</MenuItem>
@@ -194,9 +238,10 @@ const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = ({
             value={categoryFilter}
             onChange={(e) => onCategoryFilterChange(e.target.value)}
             sx={{
-              minWidth: 120,
+              minWidth: 0,
               borderRadius: 2,
               bgcolor: "background.default",
+              height: 40,
             }}
             startAdornment={
               <TuneIcon
@@ -216,23 +261,24 @@ const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = ({
             variant="contained"
             startIcon={<AddIcon />}
             onClick={onAddClick}
-            sx={{ borderRadius: 2, textTransform: "none", height: 40 }}
+            sx={{ borderRadius: 2, textTransform: "none", height: 40, whiteSpace: "nowrap" }}
           >
             Add
           </Button>
         </Box>
       </Box>
 
-      <Box>
+      <Box sx={{ overflowX: "auto" }}>
         <Box
           sx={{
             display: "grid",
             gridTemplateColumns: "1.1fr 2.3fr 1.5fr 1fr 40px",
-            px: 3,
+            px: { xs: 2, sm: 3 },
             py: 1.75,
             color: "text.secondary",
             borderBottom: 1,
             borderColor: "divider",
+            minWidth: 760,
           }}
         >
           <Typography>Date</Typography>
@@ -254,12 +300,13 @@ const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = ({
               sx={{
                 display: "grid",
                 gridTemplateColumns: "1.1fr 2.3fr 1.5fr 1fr 40px",
-                px: 3,
+                px: { xs: 2, sm: 3 },
                 py: 2,
                 alignItems: "center",
                 borderBottom: 1,
                 borderColor: "divider",
                 "&:hover": { bgcolor: "action.hover" },
+                minWidth: 760,
               }}
             >
               <Typography sx={{ color: "text.secondary" }}>
@@ -287,7 +334,7 @@ const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = ({
                     <NorthEastIcon sx={{ fontSize: 14 }} />
                   )}
                 </Box>
-                <Typography sx={{ color: "text.primary" }}>
+                <Typography sx={{ color: "text.primary" }} noWrap>
                   {t.description ?? "No description"}
                 </Typography>
                 {t.ai_tag ? (
@@ -333,13 +380,25 @@ const RecentTransactionsTable: React.FC<RecentTransactionsTableProps> = ({
                 {formatCurrency(Math.abs(t.amount))}
               </Typography>
 
-              <IconButton size="small">
+              <IconButton
+                size="small"
+                onClick={(event) => handleMenuOpen(event, t)}
+              >
                 <MoreHorizIcon sx={{ color: "text.secondary" }} />
               </IconButton>
             </Box>
           );
         })}
       </Box>
+
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem onClick={handleEdit}>Edit</MenuItem>
+        <MenuItem onClick={handleDelete}>Delete</MenuItem>
+      </Menu>
     </Container>
   );
 };

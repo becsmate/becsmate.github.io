@@ -32,7 +32,15 @@ import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import { Link } from "react-router-dom";
 import { useAuthContext } from "../contexts/AuthContext";
-import { useWalletMembers, useWallets, walletApi, Wallet } from "../services/walletService";
+import {
+  useWalletInvitations,
+  useWalletMembers,
+  useWallets,
+  walletApi,
+  Wallet,
+  WalletInvitation,
+} from "../services/walletService";
+import WalletInvitationPanel from "../components/dashboard/WalletInvitationPanel";
 import { formatCurrency } from "../utils";
 
 const WalletManagePage: React.FC = () => {
@@ -48,8 +56,22 @@ const WalletManagePage: React.FC = () => {
   const [createOpen, setCreateOpen] = useState(false);
   const [createName, setCreateName] = useState("");
   const [createType, setCreateType] = useState<"personal" | "group">("personal");
+  const [createInviteEmails, setCreateInviteEmails] = useState("");
   const [actionBusy, setActionBusy] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [detailInviteEmail, setDetailInviteEmail] = useState("");
+  const [detailInviteBusy, setDetailInviteBusy] = useState(false);
+  const [detailInviteMessage, setDetailInviteMessage] = useState<string | null>(null);
+  const [detailInviteError, setDetailInviteError] = useState<string | null>(null);
+  const [invitationBusyId, setInvitationBusyId] = useState<string | null>(null);
+  const [dismissedInvitationIds, setDismissedInvitationIds] = useState<string[]>([]);
+
+  const {
+    invitations,
+    loading: invitationsLoading,
+    error: invitationsError,
+    refetch: refetchInvitations,
+  } = useWalletInvitations("pending", true);
 
   useEffect(() => {
     if (wallets.length === 0) {
@@ -82,7 +104,21 @@ const WalletManagePage: React.FC = () => {
     members,
     loading: membersLoading,
     error: membersError,
+    refetch: refetchMembers,
   } = useWalletMembers(detailWallet?.id ?? "", Boolean(detailWallet && detailWallet.type === "group"));
+
+  const pendingInvitations = useMemo(
+    () => invitations.filter((invitation) => !dismissedInvitationIds.includes(invitation.id)),
+    [invitations, dismissedInvitationIds],
+  );
+
+  useEffect(() => {
+    if (!dismissedInvitationIds.length) return;
+
+    setDismissedInvitationIds((current) =>
+      current.filter((invitationId) => invitations.some((invitation) => invitation.id === invitationId)),
+    );
+  }, [invitations, dismissedInvitationIds.length]);
 
   const currentUserId = (user as { id?: string } | null)?.id;
 
@@ -90,6 +126,7 @@ const WalletManagePage: React.FC = () => {
     setCreateOpen(false);
     setCreateName("");
     setCreateType("personal");
+    setCreateInviteEmails("");
     setActionError(null);
   };
 
@@ -106,6 +143,9 @@ const WalletManagePage: React.FC = () => {
 
   const closeDetails = () => {
     setDetailWalletId(null);
+    setDetailInviteEmail("");
+    setDetailInviteMessage(null);
+    setDetailInviteError(null);
   };
 
   const openEditDialog = (wallet: Wallet) => {
@@ -124,6 +164,48 @@ const WalletManagePage: React.FC = () => {
     setDetailWalletId(id);
   };
 
+  const handleInvitationAction = async (
+    invitation: WalletInvitation,
+    action: "accept" | "decline",
+  ) => {
+    setInvitationBusyId(invitation.id);
+    setActionError(null);
+    setDismissedInvitationIds((current) => (current.includes(invitation.id) ? current : [...current, invitation.id]));
+    window.dispatchEvent(
+      new CustomEvent("wallet-invitations-sync", {
+        detail: { invitationId: invitation.id, mode: "hide" },
+      }),
+    );
+
+    try {
+      if (action === "accept") {
+        await walletApi.acceptInvitation(invitation.id);
+      } else {
+        await walletApi.declineInvitation(invitation.id);
+      }
+
+      await Promise.all([refetchInvitations(), refetch()]);
+      window.dispatchEvent(
+        new CustomEvent("wallet-invitations-sync", {
+          detail: { mode: "refresh" },
+        }),
+      );
+      if (action === "accept") {
+        setWalletId(invitation.wallet_id);
+      }
+    } catch (e: any) {
+      setDismissedInvitationIds((current) => current.filter((id) => id !== invitation.id));
+      window.dispatchEvent(
+        new CustomEvent("wallet-invitations-sync", {
+          detail: { invitationId: invitation.id, mode: "restore" },
+        }),
+      );
+      setActionError(e.response?.data?.error ?? `Failed to ${action} invitation.`);
+    } finally {
+      setInvitationBusyId(null);
+    }
+  };
+
   const handleCreateWallet = async () => {
     const name = createName.trim();
     if (!name) {
@@ -135,13 +217,67 @@ const WalletManagePage: React.FC = () => {
     setActionError(null);
     try {
       const wallet = await walletApi.createWallet(name, createType);
+      let createWarning: string | null = null;
+
+      if (createType === "group") {
+        const invitees = Array.from(
+          new Set(
+            createInviteEmails
+              .split(",")
+              .map((value) => value.trim().toLowerCase())
+              .filter(Boolean),
+          ),
+        );
+
+        if (invitees.length > 0) {
+          const results = await Promise.allSettled(
+            invitees.map((email) => walletApi.inviteMember(wallet.id, email)),
+          );
+          const failedCount = results.filter((result) => result.status === "rejected").length;
+
+          if (failedCount > 0) {
+            createWarning = `Wallet created, but ${failedCount} invite(s) failed.`;
+          }
+        }
+      }
+
       await refetch();
       setWalletId(wallet.id);
       closeCreateDialog();
+      if (createWarning) {
+        setActionError(createWarning);
+      }
     } catch (e: any) {
       setActionError(e.response?.data?.error ?? "Failed to create wallet.");
     } finally {
       setActionBusy(false);
+    }
+  };
+
+  const handleInviteFromDetails = async () => {
+    if (!detailWallet || detailWallet.type !== "group" || !detailWallet.is_owner) {
+      return;
+    }
+
+    const email = detailInviteEmail.trim().toLowerCase();
+    if (!email) {
+      setDetailInviteError("Email is required.");
+      return;
+    }
+
+    setDetailInviteBusy(true);
+    setDetailInviteError(null);
+    setDetailInviteMessage(null);
+
+    try {
+      await walletApi.inviteMember(detailWallet.id, email);
+      setDetailInviteEmail("");
+      setDetailInviteMessage("Invitation sent.");
+      await Promise.all([refetchMembers(), refetch()]);
+    } catch (e: any) {
+      setDetailInviteError(e.response?.data?.error ?? "Failed to send invitation.");
+    } finally {
+      setDetailInviteBusy(false);
     }
   };
 
@@ -195,8 +331,8 @@ const WalletManagePage: React.FC = () => {
   );
 
   return (
-    <Box sx={{ py: 4 }}>
-      <Container sx={{ width: "75%", minWidth: "75%" }}>
+    <Box sx={{ py: { xs: 2, md: 4 } }}>
+      <Container sx={{ width: { xs: "100%", lg: "75%" }, minWidth: 0, px: { xs: 1.5, sm: 2 } }}>
         <Stack spacing={2}>
           <Button
             variant="text"
@@ -215,7 +351,7 @@ const WalletManagePage: React.FC = () => {
             justifyContent="space-between"
           >
             <Box>
-              <Typography variant="h4" sx={{ fontWeight: 700 }}>
+              <Typography variant="h4" sx={{ fontWeight: 700, fontSize: { xs: 28, sm: 34 } }}>
                 Manage Wallets
               </Typography>
               <Typography sx={{ color: "text.secondary" }}>
@@ -230,18 +366,34 @@ const WalletManagePage: React.FC = () => {
                 setActionError(null);
                 setCreateOpen(true);
               }}
-              sx={{ textTransform: "none", borderRadius: 2.5, alignSelf: { xs: "flex-start", sm: "center" } }}
+              sx={{
+                textTransform: "none",
+                borderRadius: 2.5,
+                alignSelf: { xs: "stretch", sm: "center" },
+                whiteSpace: "nowrap",
+                width: { xs: "100%", sm: "auto" },
+              }}
             >
               New Wallet
             </Button>
           </Stack>
 
-          {(walletsError || actionError) && (
+          {(walletsError || actionError || invitationsError) && (
             <Stack spacing={1}>
               {walletsError && <Alert severity="error">{walletsError}</Alert>}
               {actionError && <Alert severity="error">{actionError}</Alert>}
+              {invitationsError && <Alert severity="error">{invitationsError}</Alert>}
             </Stack>
           )}
+
+          <WalletInvitationPanel
+            invitationsLoading={invitationsLoading}
+            walletPendingInvitations={pendingInvitations}
+            busyId={invitationBusyId}
+            onInvitationAction={handleInvitationAction}
+            title={`Wallet Social Notifications${pendingInvitations.length ? ` (${pendingInvitations.length})` : ""}`}
+            emptyMessage="No pending wallet invitations."
+          />
 
           <Stack spacing={1.25}>
             {wallets.map((wallet) => {
@@ -260,8 +412,9 @@ const WalletManagePage: React.FC = () => {
                     py: 1.75,
                     bgcolor: selected ? "rgba(25, 118, 210, 0.10)" : "background.paper",
                     display: "flex",
-                    alignItems: "center",
-                    gap: 1.5,
+                    alignItems: { xs: "stretch", sm: "center" },
+                    flexDirection: { xs: "column", sm: "row" },
+                    gap: { xs: 1.25, sm: 1.5 },
                     cursor: "pointer",
                     transition: "all 0.15s ease",
                     "&:hover": {
@@ -328,7 +481,7 @@ const WalletManagePage: React.FC = () => {
                     </Stack>
                   </Box>
 
-                  <Stack direction="row" alignItems="center" spacing={0.5}>
+                    <Stack direction="row" alignItems="center" spacing={0.5} sx={{ alignSelf: { xs: "flex-end", sm: "center" } }}>
                     <IconButton
                       size="small"
                       onClick={(event) => {
@@ -384,7 +537,7 @@ const WalletManagePage: React.FC = () => {
         }}
       >
         <DialogTitle sx={{ pb: 1.5 }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} sx={{ pr: 0.5 }}>
             <Stack direction="row" alignItems="center" spacing={1}>
               <Box
                 sx={{
@@ -416,7 +569,7 @@ const WalletManagePage: React.FC = () => {
           </Stack>
         </DialogTitle>
 
-        <DialogContent sx={{ pt: 0, pb: 3 }}>
+        <DialogContent sx={{ pt: 0, pb: 3, px: { xs: 2, sm: 3 } }}>
           <Stack spacing={2}>
             <Box
               sx={{
@@ -434,7 +587,7 @@ const WalletManagePage: React.FC = () => {
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
                 Balance
               </Typography>
-              <Typography sx={{ fontWeight: 700, fontSize: "1.75rem" }}>
+              <Typography sx={{ fontWeight: 700, fontSize: { xs: "1.25rem", sm: "1.75rem" } }}>
                 {formatCurrency(detailWallet?.balance ?? 0)}
               </Typography>
             </Box>
@@ -451,8 +604,9 @@ const WalletManagePage: React.FC = () => {
                     px: 1.5,
                     py: 1,
                     display: "flex",
-                    alignItems: "center",
+                    alignItems: { xs: "stretch", sm: "center" },
                     justifyContent: "space-between",
+                    flexDirection: { xs: "column", sm: "row" },
                     gap: 1,
                   }}
                 >
@@ -516,7 +670,7 @@ const WalletManagePage: React.FC = () => {
                     </Box>
                   </Stack>
 
-                  <Stack direction="row" spacing={0.75} alignItems="center">
+                  <Stack direction="row" spacing={0.75} alignItems="center" sx={{ alignSelf: { xs: "flex-end", sm: "center" } }}>
                     {member.id === currentUserId && <Chip label="You" size="small" variant="outlined" />}
                     <Chip
                       icon={member.role === "owner" ? <SettingsOutlinedIcon sx={{ fontSize: 14 }} /> : <PersonOutlineOutlinedIcon sx={{ fontSize: 14 }} />}
@@ -529,13 +683,40 @@ const WalletManagePage: React.FC = () => {
                 </Box>
               ))
             )}
+
+            {detailWallet?.type === "group" && detailWallet.is_owner && (
+              <>
+                <Divider />
+                <Typography sx={{ fontWeight: 600 }}>Invite members</Typography>
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                  <TextField
+                    label="Invite member by email"
+                    value={detailInviteEmail}
+                    onChange={(event) => setDetailInviteEmail(event.target.value)}
+                    fullWidth
+                    size="small"
+                    disabled={detailInviteBusy}
+                  />
+                  <Button
+                    variant="contained"
+                    onClick={handleInviteFromDetails}
+                    disabled={detailInviteBusy || !detailInviteEmail.trim()}
+                    sx={{ width: { xs: "100%", sm: "auto" }, textTransform: "none" }}
+                  >
+                    Invite
+                  </Button>
+                </Stack>
+                {detailInviteMessage && <Alert severity="success">{detailInviteMessage}</Alert>}
+                {detailInviteError && <Alert severity="error">{detailInviteError}</Alert>}
+              </>
+            )}
           </Stack>
         </DialogContent>
       </Dialog>
 
       <Dialog open={createOpen} onClose={closeCreateDialog} fullWidth maxWidth="xs">
         <DialogTitle>Create Wallet</DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
           <Stack spacing={2} sx={{ mt: 1 }}>
             <TextField
               label="Wallet Name"
@@ -557,19 +738,36 @@ const WalletManagePage: React.FC = () => {
                 <MenuItem value="group">Group</MenuItem>
               </Select>
             </FormControl>
+
+            {createType === "group" && (
+              <TextField
+                label="Invite emails (comma separated)"
+                value={createInviteEmails}
+                onChange={(event) => setCreateInviteEmails(event.target.value)}
+                placeholder="alice@example.com, bob@example.com"
+                fullWidth
+                size="small"
+              />
+            )}
           </Stack>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={closeCreateDialog} disabled={actionBusy}>Cancel</Button>
-          <Button variant="contained" onClick={handleCreateWallet} disabled={actionBusy}>Create</Button>
+        <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: 2.5, pt: 0 }}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ width: "100%" }}>
+            <Button onClick={closeCreateDialog} disabled={actionBusy} fullWidth>
+              Cancel
+            </Button>
+            <Button variant="contained" onClick={handleCreateWallet} disabled={actionBusy} fullWidth>
+              Create
+            </Button>
+          </Stack>
         </DialogActions>
       </Dialog>
 
       <Dialog open={Boolean(editWallet)} onClose={closeEditDialog} fullWidth maxWidth="xs">
         <DialogTitle>Edit Wallet</DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
           <Typography variant="body2" sx={{ color: "text.secondary", mb: 2 }}>
-            Update your wallet details and invite new members.
+            Update your wallet details.
           </Typography>
           <TextField
             label="Wallet Name"
@@ -579,22 +777,34 @@ const WalletManagePage: React.FC = () => {
             size="small"
           />
         </DialogContent>
-        <DialogActions>
-          <Button onClick={closeEditDialog} disabled={actionBusy}>Cancel</Button>
-          <Button variant="contained" onClick={handleSaveWalletName} disabled={actionBusy}>Save Changes</Button>
+        <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: 2.5, pt: 0 }}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ width: "100%" }}>
+            <Button onClick={closeEditDialog} disabled={actionBusy} fullWidth>
+              Cancel
+            </Button>
+            <Button variant="contained" onClick={handleSaveWalletName} disabled={actionBusy} fullWidth>
+              Save Changes
+            </Button>
+          </Stack>
         </DialogActions>
       </Dialog>
 
       <Dialog open={Boolean(deleteWallet)} onClose={closeDeleteDialog} fullWidth maxWidth="sm">
         <DialogTitle>Delete Wallet</DialogTitle>
-        <DialogContent>
+        <DialogContent sx={{ px: { xs: 2, sm: 3 } }}>
           <Typography sx={{ color: "text.secondary" }}>
             Are you sure you want to delete "{deleteWallet?.name}"? This action cannot be undone and all transaction history will be lost.
           </Typography>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={closeDeleteDialog} disabled={actionBusy}>Cancel</Button>
-          <Button color="error" variant="contained" onClick={handleDeleteWallet} disabled={actionBusy}>Delete Wallet</Button>
+        <DialogActions sx={{ px: { xs: 2, sm: 3 }, pb: 2.5, pt: 0 }}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ width: "100%" }}>
+            <Button onClick={closeDeleteDialog} disabled={actionBusy} fullWidth>
+              Cancel
+            </Button>
+            <Button color="error" variant="contained" onClick={handleDeleteWallet} disabled={actionBusy} fullWidth>
+              Delete Wallet
+            </Button>
+          </Stack>
         </DialogActions>
       </Dialog>
     </Box>

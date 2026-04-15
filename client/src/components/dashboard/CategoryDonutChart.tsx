@@ -41,9 +41,10 @@ const CategoryDonutChart: React.FC<CategoryDonutChartProps> = ({
         border: 1,
         borderColor: "divider",
         borderRadius: 5,
-        p: 3,
+        p: { xs: 2, sm: 3 },
         bgcolor: "background.paper",
-        width: "40%",
+        width: "100%",
+        minWidth: 0,
       }}
     >
       <Typography sx={{ color: "text.primary", fontWeight: 600 }}>
@@ -53,7 +54,7 @@ const CategoryDonutChart: React.FC<CategoryDonutChartProps> = ({
         {new Date().toLocaleDateString("en-US", { month: "long" })} breakdown
       </Typography>
 
-      <Box sx={{ width: "100%", height: 260 }}>
+      <Box sx={{ width: "100%", height: { xs: 240, sm: 280 } }}>
         {data.length === 0 ? (
           <Box
             sx={{
@@ -76,8 +77,8 @@ const CategoryDonutChart: React.FC<CategoryDonutChartProps> = ({
                 nameKey="name"
                 cx="50%"
                 cy="45%"
-                innerRadius={60}
-                outerRadius={90}
+                innerRadius={52}
+                outerRadius={82}
                 paddingAngle={3}
                 stroke={theme.palette.background.paper}
                 strokeWidth={2}
@@ -99,6 +100,7 @@ const CategoryDonutChart: React.FC<CategoryDonutChartProps> = ({
                   color: theme.palette.text.primary,
                 }}
                 labelStyle={{ color: theme.palette.text.secondary }}
+                itemStyle={{ color: theme.palette.text.primary }}
               />
 
               <RechartsLegend
@@ -106,8 +108,9 @@ const CategoryDonutChart: React.FC<CategoryDonutChartProps> = ({
                 align="center"
                 iconType="circle"
                 wrapperStyle={{
-                  color: theme.palette.text.secondary,
+                  color: theme.palette.text.primary,
                   fontSize: 12,
+                  fontWeight: 500,
                   paddingTop: 10,
                 }}
               />

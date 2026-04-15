@@ -41,10 +41,10 @@ const IncomeExpensesChart: React.FC<IncomeExpensesChartProps> = ({
         border: 1,
         borderColor: "divider",
         borderRadius: 5,
-        p: 3,
+        p: { xs: 2, sm: 3 },
         bgcolor: "background.paper",
-        mb: 4,
-        width: "60%",
+        width: "100%",
+        minWidth: 0,
       }}
     >
       <Typography sx={{ color: "text.primary", fontWeight: 600 }}>
@@ -57,12 +57,12 @@ const IncomeExpensesChart: React.FC<IncomeExpensesChartProps> = ({
       <Box
         sx={{
           width: "100%",
-          height: 300,
+          height: { xs: 240, sm: 300 },
           border: 1,
           borderColor: "divider",
           borderRadius: 3,
           bgcolor: "background.default",
-          p: 1,
+          p: { xs: 0.5, sm: 1 },
         }}
       >
         {data.length === 0 ? (
@@ -93,7 +93,7 @@ const IncomeExpensesChart: React.FC<IncomeExpensesChartProps> = ({
                 dataKey="month"
                 tickLine={false}
                 axisLine={false}
-                tick={{ fill: theme.palette.text.secondary, fontSize: 12 }}
+                tick={{ fill: theme.palette.text.secondary, fontSize: 11 }}
               />
               <YAxis
                 tickLine={false}

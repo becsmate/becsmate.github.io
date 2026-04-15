@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { apiClient } from "./apiClient";
 
 export interface Summary {
@@ -63,8 +63,12 @@ export function useStatistics(walletId: string | null) {
   const [categories, setCategories] = useState<CategoryData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const requestCounterRef = useRef(0);
 
   const fetch = useCallback(async () => {
+    requestCounterRef.current += 1;
+    const requestId = requestCounterRef.current;
+
     setLoading(true);
     setError(null);
     try {
@@ -81,15 +85,25 @@ export function useStatistics(walletId: string | null) {
         statisticsApi.getUserSummary(),
         statisticsApi.getUserMonthly(),
       ]);
+
+      if (requestId !== requestCounterRef.current) {
+        return;
+      }
+
       setSummary(s as Summary | null);
       setMonthly(m as MonthlyData[]);
       setCategories(c as CategoryData[]);
       setUserSummary(us as Summary | null);
       setUserMonthly(um as MonthlyData[]);
     } catch (e: any) {
+      if (requestId !== requestCounterRef.current) {
+        return;
+      }
       setError(e.response?.data?.error ?? "Failed to load statistics");
     } finally {
-      setLoading(false);
+      if (requestId === requestCounterRef.current) {
+        setLoading(false);
+      }
     }
   }, [walletId]);
 

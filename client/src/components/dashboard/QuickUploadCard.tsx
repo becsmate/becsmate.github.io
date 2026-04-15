@@ -36,10 +36,11 @@ const QuickUploadCard: React.FC<QuickUploadCardProps> = ({
         border: "1px dashed",
         borderColor: dragActive ? "primary.main" : "divider",
         borderRadius: 5,
-        p: 3,
+        p: { xs: 2, sm: 3 },
         bgcolor: "background.paper",
-        width: 280,
-        minHeight: 220,
+        width: { xs: "100%", lg: 280 },
+        maxWidth: { xs: "100%", lg: 280 },
+        minHeight: { xs: 170, lg: 220 },
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -87,7 +88,8 @@ const QuickUploadCard: React.FC<QuickUploadCardProps> = ({
         <Button
           variant="contained"
           onClick={pickFile}
-          sx={{ textTransform: "none", borderRadius: 2 }}
+          fullWidth
+          sx={{ textTransform: "none", borderRadius: 2, minHeight: 40 }}
         >
           Browse files
         </Button>

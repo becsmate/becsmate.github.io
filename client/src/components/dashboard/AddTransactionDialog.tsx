@@ -101,7 +101,7 @@ const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
         },
       }}
     >
-      <DialogContent sx={{ p: 3 }}>
+      <DialogContent sx={{ p: { xs: 2, sm: 3 } }}>
         <Stack spacing={2}>
           <Box>
             <Typography variant="h5" sx={{ fontWeight: 700 }}>
@@ -212,11 +212,20 @@ const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
             }}
           />
 
-          <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1, pt: 1 }}>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", sm: "auto auto" },
+              justifyContent: { xs: "stretch", sm: "end" },
+              gap: 1,
+              pt: 1,
+            }}
+          >
             <Button
               onClick={handleClose}
               disabled={busy}
-              sx={{ textTransform: "none", borderRadius: 2 }}
+              fullWidth
+              sx={{ textTransform: "none", borderRadius: 2, minHeight: 40 }}
             >
               Cancel
             </Button>
@@ -224,7 +233,8 @@ const AddTransactionDialog: React.FC<AddTransactionDialogProps> = ({
               variant="contained"
               disabled={!canSubmit}
               onClick={handleSubmit}
-              sx={{ textTransform: "none", borderRadius: 2 }}
+              fullWidth
+              sx={{ textTransform: "none", borderRadius: 2, minHeight: 40 }}
             >
               {entryType === "income" ? "Add Income" : "Add Expense"}
             </Button>

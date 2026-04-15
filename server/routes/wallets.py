@@ -118,6 +118,10 @@ def delete_wallet(wallet_id):
     if not wallet:
         return jsonify({"error": "Wallet not found or permission denied"}), 404
 
+    # Clear invitations explicitly to avoid intermittent FK issues on wallet deletion.
+    for invitation in wallet.invitations.all():
+        db.session.delete(invitation)
+
     db.session.delete(wallet)
     db.session.commit()
     return jsonify({"message": "Wallet deleted"}), 200
@@ -269,7 +273,7 @@ def accept_invitation(invitation_id):
     if not wallet or not user:
         return jsonify({"error": "Wallet or user not found"}), 404
 
-    if wallet.owner_id != user_id and not wallet.members.filter_by(id=user_id).first():
+    if not wallet.members.filter_by(id=user_id).first():
         wallet.members.append(user)
 
     invitation.status = "accepted"

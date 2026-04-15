@@ -58,9 +58,9 @@ const WalletMembersPanel: React.FC<WalletMembersPanelProps> = ({
         border: 1,
         borderColor: 'divider',
         borderRadius: 5,
-        p: 3,
+        p: { xs: 2, sm: 3 },
         bgcolor: 'background.paper',
-        width: '75%',
+        width: { xs: '100%', xl: '75%' },
       }}
     >
       <Stack spacing={2}>
@@ -126,6 +126,7 @@ const WalletMembersPanel: React.FC<WalletMembersPanelProps> = ({
                 variant="contained"
                 onClick={onInvite}
                 disabled={inviteBusy || !inviteEmail.trim()}
+                sx={{ textTransform: 'none', width: { xs: '100%', sm: 'auto' } }}
               >
                 Invite
               </Button>
@@ -146,7 +147,7 @@ const WalletMembersPanel: React.FC<WalletMembersPanelProps> = ({
             color="error"
             onClick={onLeaveWallet}
             disabled={busyId === userId}
-            sx={{ alignSelf: 'flex-start' }}
+            sx={{ alignSelf: { xs: 'stretch', sm: 'flex-start' }, textTransform: 'none' }}
           >
             Leave Wallet
           </Button>

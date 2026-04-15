@@ -195,6 +195,13 @@ export function useTransactions(walletId: string, filters?: TransactionFilters) 
   const [error, setError] = useState<string | null>(null);
 
   const fetch = useCallback(async () => {
+    if (!walletId) {
+      setTransactions([]);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     try {
       setLoading(true);
       setTransactions(await walletApi.getTransactions(walletId, filters));

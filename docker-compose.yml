@@ -30,7 +30,7 @@ services:
     environment:
       - FLASK_APP=app
       - FLASK_ENV=development
-      - DATABASE_URL=postgresql://postgres:local_password@db:5432/financetracker
+      - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/financetracker
       - CORS_ORIGINS=http://localhost:3000,http://100.122.24.120:3000,http://kali-server:3000
     volumes:
       - ./server:/app

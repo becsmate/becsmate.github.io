@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -32,9 +32,50 @@ const Navigation: React.FC<NavigationProps> = ({
   toggleDarkMode,
 }) => {
   const { isAuthenticated, logout, user } = useAuthContext();
-  const { invitations } = useWalletInvitations("pending", isAuthenticated);
+  const { invitations, refetch: refetchInvitations } = useWalletInvitations("pending", isAuthenticated);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const pendingInvitationCount = invitations.length;
+  const [optimisticallyHiddenIds, setOptimisticallyHiddenIds] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    const handleInvitationBadgeSync = (event: Event) => {
+      const customEvent = event as CustomEvent<{ invitationId?: string; mode?: "hide" | "restore" | "refresh" }>;
+      const invitationId = customEvent.detail?.invitationId;
+      const mode = customEvent.detail?.mode ?? "refresh";
+
+      if (mode === "hide" && invitationId) {
+        setOptimisticallyHiddenIds((current) =>
+          current.includes(invitationId) ? current : [...current, invitationId],
+        );
+      } else if (mode === "restore" && invitationId) {
+        setOptimisticallyHiddenIds((current) => current.filter((id) => id !== invitationId));
+      }
+
+      if (mode === "refresh" || mode === "restore") {
+        refetchInvitations();
+      }
+    };
+
+    window.addEventListener("wallet-invitations-sync", handleInvitationBadgeSync as EventListener);
+
+    return () => {
+      window.removeEventListener("wallet-invitations-sync", handleInvitationBadgeSync as EventListener);
+    };
+  }, [isAuthenticated, refetchInvitations]);
+
+  useEffect(() => {
+    if (!optimisticallyHiddenIds.length) return;
+
+    setOptimisticallyHiddenIds((current) =>
+      current.filter((invitationId) => invitations.some((invitation) => invitation.id === invitationId)),
+    );
+  }, [invitations, optimisticallyHiddenIds.length]);
+
+  const pendingInvitationCount = useMemo(
+    () => invitations.filter((invitation) => !optimisticallyHiddenIds.includes(invitation.id)).length,
+    [invitations, optimisticallyHiddenIds],
+  );
 
   const handleOpen = (e: React.MouseEvent<HTMLElement>) =>
     setAnchorEl(e.currentTarget);
@@ -143,15 +184,15 @@ const Navigation: React.FC<NavigationProps> = ({
                   variant="subtitle1"
                   sx={{ px: 2, py: 1, borderBottom: 1, borderColor: "divider" }}
                 >
-                  My Account
+                  {user?.name || user?.email || "User"}
                 </Typography>
-                <MenuItem onClick={handleClose} component={Link} to="/profile">
+                {/* <MenuItem onClick={handleClose} component={Link} to="/profile">
                   <Person2OutlinedIcon sx={{ mr: 2 }} />
                   <Typography textAlign="center">Profile</Typography>
-                </MenuItem>
+                </MenuItem> */}
                 <MenuItem onClick={handleClose} component={Link} to="/settings">
-                  <SettingsOutlinedIcon sx={{ mr: 2 }} />
-                  <Typography textAlign="center">Settings</Typography>
+                  <Person2OutlinedIcon sx={{ mr: 2 }} />
+                  <Typography textAlign="center">Profile Settings</Typography>
                 </MenuItem>
                 <MenuItem
                   onClick={handleClose}

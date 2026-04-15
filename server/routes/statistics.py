@@ -9,7 +9,15 @@ statistics_bp = Blueprint("statistics", __name__, url_prefix="/api/statistics")
 
 def _check_wallet_access(wallet_id, user_id):
     wallet = db.session.get(Wallet, wallet_id)
-    return wallet if wallet and wallet.owner_id == user_id else None
+    if not wallet:
+        return None
+    if wallet.owner_id == user_id:
+        return wallet
+
+    members = wallet.members
+    if hasattr(members, "filter_by"):
+        return wallet if members.filter_by(id=user_id).first() else None
+    return wallet if any(member.id == user_id for member in members) else None
 
 
 @statistics_bp.route("/<string:wallet_id>/summary", methods=["GET"])
