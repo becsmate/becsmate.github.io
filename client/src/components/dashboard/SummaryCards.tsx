@@ -1,11 +1,10 @@
 import React from "react";
 import { Box, Typography, useTheme } from "@mui/material";
-import Icon from "@mdi/react";
 import { formatCurrency } from "../../utils";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import SouthWestIcon from "@mui/icons-material/SouthWest";
 import MovingSharpIcon from "@mui/icons-material/MovingSharp";
-import { mdiBullseye } from "@mdi/js";
+import TrackChangesIcon from "@mui/icons-material/TrackChanges";
 
 type UserSummary = {
   income?: number;
@@ -180,7 +179,7 @@ const SummaryCards: React.FC<SummaryCardsProps> = ({
               color: "#2fc6b7",
             }}
           >
-            <Icon path={mdiBullseye} size={1} color="currentColor" />
+            <TrackChangesIcon />
           </Box>
         </Box>
       </Box>
