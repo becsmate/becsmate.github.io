@@ -19,6 +19,7 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { alpha, useTheme } from "@mui/material/styles";
 import { Link } from "react-router-dom";
 
 const features = [
@@ -69,6 +70,16 @@ const technologies = [
 ];
 
 export default function LandingPage() {
+  const theme = useTheme();
+  const featureCardBg =
+    theme.palette.mode === "dark"
+      ? "rgba(4,12,44,0.7)"
+      : alpha(theme.palette.background.paper, 0.92);
+  const featureIconBg =
+    theme.palette.mode === "dark"
+      ? "rgba(69,83,211,0.15)"
+      : alpha("#4553d3", 0.1);
+
   return (
     <Box sx={{ width: "100%", color: "text.primary" }}>
       <Box
@@ -294,7 +305,7 @@ export default function LandingPage() {
                   borderRadius: 3,
                   border: 1,
                   borderColor: "divider",
-                  bgcolor: "rgba(4,12,44,0.7)",
+                  bgcolor: featureCardBg,
                 }}
               >
                 <Box
@@ -305,7 +316,7 @@ export default function LandingPage() {
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    bgcolor: "rgba(69,83,211,0.15)",
+                    bgcolor: featureIconBg,
                     color: "#4553d3",
                     mb: 2,
                   }}
