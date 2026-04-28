@@ -89,3 +89,170 @@ def test_wallets_members(client):
     members = resp_members.get_json()["members"]
     assert len(members) == 1
     assert members[0]["role"] == "owner"
+
+
+def test_wallets_invitation_accept_flow(client):
+    owner_token = get_auth_token(client, "w7_owner@example.com", "W7 Owner")
+    member_token = get_auth_token(client, "w7_member@example.com", "W7 Member")
+
+    resp_create = client.post(
+        "/api/wallets",
+        json={"name": "W7 Group", "type": "group"},
+        headers={"Authorization": f"Bearer {owner_token}"},
+    )
+    wallet_id = resp_create.get_json()["wallet"]["id"]
+
+    resp_invite = client.post(
+        f"/api/wallets/{wallet_id}/members",
+        json={"email": "w7_member@example.com"},
+        headers={"Authorization": f"Bearer {owner_token}"},
+    )
+    assert resp_invite.status_code == 201
+    invitation_id = resp_invite.get_json()["invitation"]["id"]
+
+    resp_list = client.get(
+        "/api/wallets/invitations",
+        headers={"Authorization": f"Bearer {member_token}"},
+    )
+    assert resp_list.status_code == 200
+    invitations = resp_list.get_json()["invitations"]
+    assert len(invitations) == 1
+
+    resp_accept = client.post(
+        f"/api/wallets/invitations/{invitation_id}/accept",
+        headers={"Authorization": f"Bearer {member_token}"},
+    )
+    assert resp_accept.status_code == 200
+
+    resp_wallet = client.get(
+        f"/api/wallets/{wallet_id}",
+        headers={"Authorization": f"Bearer {member_token}"},
+    )
+    assert resp_wallet.status_code == 200
+
+
+def test_wallets_invitation_decline_flow(client):
+    owner_token = get_auth_token(client, "w8_owner@example.com", "W8 Owner")
+    member_token = get_auth_token(client, "w8_member@example.com", "W8 Member")
+
+    resp_create = client.post(
+        "/api/wallets",
+        json={"name": "W8 Group", "type": "group"},
+        headers={"Authorization": f"Bearer {owner_token}"},
+    )
+    wallet_id = resp_create.get_json()["wallet"]["id"]
+
+    resp_invite = client.post(
+        f"/api/wallets/{wallet_id}/members",
+        json={"email": "w8_member@example.com"},
+        headers={"Authorization": f"Bearer {owner_token}"},
+    )
+    invitation_id = resp_invite.get_json()["invitation"]["id"]
+
+    resp_decline = client.post(
+        f"/api/wallets/invitations/{invitation_id}/decline",
+        headers={"Authorization": f"Bearer {member_token}"},
+    )
+    assert resp_decline.status_code == 200
+
+    resp_list = client.get(
+        "/api/wallets/invitations?status=declined",
+        headers={"Authorization": f"Bearer {member_token}"},
+    )
+    assert resp_list.status_code == 200
+    invitations = resp_list.get_json()["invitations"]
+    assert len(invitations) == 1
+
+
+def test_wallets_invitation_invalid_status_filter(client):
+    token = get_auth_token(client, "w9@example.com", "W9 User")
+    resp = client.get(
+        "/api/wallets/invitations?status=unknown",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 400
+
+
+def test_wallets_add_member_errors(client):
+    owner_token = get_auth_token(client, "w10_owner@example.com", "W10 Owner")
+    get_auth_token(client, "w10_member@example.com", "W10 Member")
+
+    resp_create = client.post(
+        "/api/wallets",
+        json={"name": "W10 Personal", "type": "personal"},
+        headers={"Authorization": f"Bearer {owner_token}"},
+    )
+    wallet_id = resp_create.get_json()["wallet"]["id"]
+
+    resp_personal = client.post(
+        f"/api/wallets/{wallet_id}/members",
+        json={"email": "w10_member@example.com"},
+        headers={"Authorization": f"Bearer {owner_token}"},
+    )
+    assert resp_personal.status_code == 400
+
+    resp_missing = client.post(
+        f"/api/wallets/{wallet_id}/members",
+        json={},
+        headers={"Authorization": f"Bearer {owner_token}"},
+    )
+    assert resp_missing.status_code == 400
+
+    resp_not_found = client.post(
+        f"/api/wallets/{wallet_id}/members",
+        json={"email": "missing@example.com"},
+        headers={"Authorization": f"Bearer {owner_token}"},
+    )
+    assert resp_not_found.status_code == 400
+
+
+def test_wallets_remove_member_self_and_owner_block(client):
+    owner_token = get_auth_token(client, "w11_owner@example.com", "W11 Owner")
+    member_token = get_auth_token(client, "w11_member@example.com", "W11 Member")
+
+    resp_create = client.post(
+        "/api/wallets",
+        json={"name": "W11 Group", "type": "group"},
+        headers={"Authorization": f"Bearer {owner_token}"},
+    )
+    wallet_id = resp_create.get_json()["wallet"]["id"]
+
+    resp_invite = client.post(
+        f"/api/wallets/{wallet_id}/members",
+        json={"email": "w11_member@example.com"},
+        headers={"Authorization": f"Bearer {owner_token}"},
+    )
+    invitation_id = resp_invite.get_json()["invitation"]["id"]
+
+    client.post(
+        f"/api/wallets/invitations/{invitation_id}/accept",
+        headers={"Authorization": f"Bearer {member_token}"},
+    )
+
+    resp_remove_missing = client.delete(
+        f"/api/wallets/{wallet_id}/members/does-not-exist",
+        headers={"Authorization": f"Bearer {member_token}"},
+    )
+    assert resp_remove_missing.status_code == 403
+
+    member_id = client.get(
+        "/api/auth/me",
+        headers={"Authorization": f"Bearer {member_token}"},
+    ).get_json()["user"]["id"]
+
+    resp_remove_self = client.delete(
+        f"/api/wallets/{wallet_id}/members/{member_id}",
+        headers={"Authorization": f"Bearer {member_token}"},
+    )
+    assert resp_remove_self.status_code == 200
+
+    owner_id = client.get(
+        "/api/auth/me",
+        headers={"Authorization": f"Bearer {owner_token}"},
+    ).get_json()["user"]["id"]
+
+    resp_owner_leave = client.delete(
+        f"/api/wallets/{wallet_id}/members/{owner_id}",
+        headers={"Authorization": f"Bearer {owner_token}"},
+    )
+    assert resp_owner_leave.status_code == 400

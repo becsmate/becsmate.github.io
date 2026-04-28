@@ -88,3 +88,43 @@ def test_statistics_user_summary(client):
     resp_summ = client.get(f"/api/statistics/summary", headers={"Authorization": f"Bearer {token}"})
     assert resp_summ.status_code == 200
     assert resp_summ.get_json()["total"] == 100.0
+
+
+def test_statistics_user_monthly(client):
+    token = get_auth_token(client, "s6@example.com", "S6 User")
+    resp_create = client.post(
+        "/api/wallets",
+        json={"name": "Wallet S6", "type": "personal"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    wallet_id = resp_create.get_json()["wallet"]["id"]
+
+    client.post(
+        f"/api/wallets/{wallet_id}/transactions",
+        json={"amount": 120, "category": "Salary", "date": "2023-02-01T12:00:00"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    client.post(
+        f"/api/wallets/{wallet_id}/transactions",
+        json={"amount": -20, "category": "Food", "date": "2023-02-02T12:00:00"},
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    resp_monthly = client.get(
+        "/api/statistics/monthly",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp_monthly.status_code == 200
+    monthly = resp_monthly.get_json()["monthly"]
+    assert len(monthly) == 1
+    assert monthly[0]["month"] == "2023-02"
+    assert monthly[0]["total"] == 100.0
+
+
+def test_statistics_wallet_not_found(client):
+    token = get_auth_token(client, "s7@example.com", "S7 User")
+    resp = client.get(
+        "/api/statistics/does-not-exist/summary",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+    assert resp.status_code == 404
