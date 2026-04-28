@@ -4,6 +4,15 @@ import { act } from 'react-dom/test-utils';
 import { AuthProvider } from './contexts/AuthContext';
 import App from './App';
 
+jest.mock('./services/apiClient', () => ({
+  apiClient: {
+    get: jest.fn(),
+    post: jest.fn(),
+    patch: jest.fn(),
+    delete: jest.fn(),
+  },
+}));
+
 jest.mock('./services/authService', () => ({
   useAuth: () => ({
     user: null,
