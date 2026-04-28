@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { act } from 'react';
 import ReactDOM from 'react-dom/client';
-import { act } from 'react-dom/test-utils';
 import { AuthProvider } from './contexts/AuthContext';
 import App from './App';
 
@@ -25,6 +24,10 @@ jest.mock('./services/authService', () => ({
     isAuthenticated: false,
   }),
 }));
+
+beforeAll(() => {
+  (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+});
 
 beforeAll(() => {
   if (!window.matchMedia) {

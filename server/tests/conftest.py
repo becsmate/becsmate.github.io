@@ -3,6 +3,10 @@ import os
 import sys
 
 import pytest
+from dotenv import load_dotenv
+
+# Load test env vars from .env.test if it exists
+load_dotenv(os.path.join(os.path.dirname(__file__), "../../.env.test"))
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
@@ -17,8 +21,8 @@ def app(tmp_path, monkeypatch):
         raise RuntimeError("Set TEST_DATABASE_URL (preferred) or DATABASE_URL for tests.")
 
     monkeypatch.setenv("DATABASE_URL", db_url)
-    monkeypatch.setenv("SECRET_KEY", "test-secret")
-    monkeypatch.setenv("JWT_SECRET_KEY", "test-jwt-secret")
+    monkeypatch.setenv("SECRET_KEY", "test-secret-that-is-at-least-thirty-two-bytes-long")
+    monkeypatch.setenv("JWT_SECRET_KEY", "test-jwt-secret-that-is-at-least-thirty-two-bytes-long")
     monkeypatch.setenv("CORS_ORIGINS", "http://localhost")
     monkeypatch.setenv("UPLOAD_FOLDER", str(upload_dir))
 

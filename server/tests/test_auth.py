@@ -1,7 +1,7 @@
-def test_auth_register_login_refresh_me(client):
+def test_auth_register(client):
     register_payload = {
-        "email": "user@example.com",
-        "name": "Test User",
+        "email": "user_reg@example.com",
+        "name": "Test User Reg",
         "password": "secret123",
     }
     register_resp = client.post("/api/auth/register", json=register_payload)
@@ -10,14 +10,37 @@ def test_auth_register_login_refresh_me(client):
     assert "access_token" in register_data
     assert "refresh_token" in register_data
 
+
+def test_auth_login(client):
+    # Setup: Register first
+    client.post("/api/auth/register", json={
+        "email": "user_log@example.com",
+        "name": "Test User Log",
+        "password": "secret123",
+    })
+
     login_resp = client.post(
         "/api/auth/login",
-        json={"email": "user@example.com", "password": "secret123"},
+        json={"email": "user_log@example.com", "password": "secret123"},
     )
     assert login_resp.status_code == 200
     login_data = login_resp.get_json()
     assert "access_token" in login_data
     assert "refresh_token" in login_data
+
+
+def test_auth_refresh(client):
+    # Setup: Register and Login
+    client.post("/api/auth/register", json={
+        "email": "user_ref@example.com",
+        "name": "Test User Ref",
+        "password": "secret123",
+    })
+    login_resp = client.post(
+        "/api/auth/login",
+        json={"email": "user_ref@example.com", "password": "secret123"},
+    )
+    login_data = login_resp.get_json()
 
     refresh_resp = client.post(
         "/api/auth/refresh",
@@ -27,10 +50,24 @@ def test_auth_register_login_refresh_me(client):
     refresh_data = refresh_resp.get_json()
     assert "access_token" in refresh_data
 
+
+def test_auth_me(client):
+    # Setup: Register and Login
+    client.post("/api/auth/register", json={
+        "email": "user_me@example.com",
+        "name": "Test User Me",
+        "password": "secret123",
+    })
+    login_resp = client.post(
+        "/api/auth/login",
+        json={"email": "user_me@example.com", "password": "secret123"},
+    )
+    login_data = login_resp.get_json()
+
     me_resp = client.get(
         "/api/auth/me",
         headers={"Authorization": f"Bearer {login_data['access_token']}"},
     )
     assert me_resp.status_code == 200
     me_data = me_resp.get_json()
-    assert me_data["user"]["email"] == "user@example.com"
+    assert me_data["user"]["email"] == "user_me@example.com"

@@ -17,6 +17,7 @@ node_modules/
 .env.development.local
 .env.test.local
 .env.production.local
+.env.test
 client/.env
 
 # Python
@@ -43,6 +44,7 @@ share/python-wheels/
 *.egg
 MANIFEST
 instance/
+.venv
 
 # Logs
 npm-debug.log*
@@ -74,5 +76,6 @@ Thumbs.db
 # temporary files
 tmp_files/
 
-# markdown files
-markdowns/
+# coverage reports
+.coverage
+coverage.*
