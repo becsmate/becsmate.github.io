@@ -12,6 +12,7 @@ import {
   UploadFileOutlined,
   InsightsOutlined,
 } from "@mui/icons-material";
+import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import {
   Box,
   Button,
@@ -19,7 +20,11 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { alpha, useTheme } from "@mui/material/styles";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import TermsDialog from "../components/landing/Terms";
+import PrivacyDialog from "../components/landing/Privacy";
 
 const features = [
   {
@@ -69,6 +74,19 @@ const technologies = [
 ];
 
 export default function LandingPage() {
+  const theme = useTheme();
+  const [termsOpen, setTermsOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+
+  const featureCardBg =
+    theme.palette.mode === "dark"
+      ? "rgba(4,12,44,0.7)"
+      : alpha(theme.palette.background.paper, 0.92);
+  const featureIconBg =
+    theme.palette.mode === "dark"
+      ? "rgba(69,83,211,0.15)"
+      : alpha("#4553d3", 0.1);
+
   return (
     <Box sx={{ width: "100%", color: "text.primary" }}>
       <Box
@@ -138,7 +156,6 @@ export default function LandingPage() {
                 Track your expenses with AI. Just snap a photo of your receipt, and our Azure &amp; Groq-powered engine extracts the data instantly.
               </Typography>
 
-              <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} sx={{ mt: 4 }}>
                 <Button
                   component={Link}
                   to="/register"
@@ -156,24 +173,6 @@ export default function LandingPage() {
                 >
                   Try it for free
                 </Button>
-                <Button
-                  component={Link}
-                  to="/login"
-                  variant="outlined"
-                  startIcon={<PlayArrowOutlined />}
-                  sx={{
-                    minHeight: 44,
-                    borderRadius: 2.5,
-                    px: 3.5,
-                    textTransform: "none",
-                    fontWeight: 700,
-                    borderColor: "divider",
-                    color: "text.primary",
-                  }}
-                >
-                  How it works
-                </Button>
-              </Stack>
             </Box>
 
             <Box
@@ -294,7 +293,7 @@ export default function LandingPage() {
                   borderRadius: 3,
                   border: 1,
                   borderColor: "divider",
-                  bgcolor: "rgba(4,12,44,0.7)",
+                  bgcolor: featureCardBg,
                 }}
               >
                 <Box
@@ -305,7 +304,7 @@ export default function LandingPage() {
                     display: "inline-flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    bgcolor: "rgba(69,83,211,0.15)",
+                    bgcolor: featureIconBg,
                     color: "#4553d3",
                     mb: 2,
                   }}
@@ -459,28 +458,35 @@ export default function LandingPage() {
             alignItems={{ xs: "flex-start", md: "center" }}
           >
             <Stack direction="row" spacing={1} alignItems="center">
-              <Box
+              <AccountBalanceWalletOutlinedIcon
                 sx={{
-                  width: 26,
+                  bgcolor: "#353e8c",
+                  color: "white",
+                  borderRadius: "30%",
+                  p: 0.5,
                   height: 26,
-                  borderRadius: 1.2,
-                  bgcolor: "#4553d3",
-                  color: "#fff",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 13,
-                  fontWeight: 700,
+                  width: 26,
                 }}
-              >
-                ◘
-              </Box>
+              />
               <Typography sx={{ fontWeight: 700 }}>FinanceAI</Typography>
             </Stack>
             <Typography sx={{ color: "text.secondary" }}>© 2026 FinanceAI. All rights reserved.</Typography>
             <Stack direction="row" spacing={2.5}>
-              <Typography sx={{ color: "text.secondary" }}>Terms</Typography>
-              <Typography sx={{ color: "text.secondary" }}>Privacy</Typography>
+              <Typography 
+                sx={{ color: "text.secondary", cursor: "pointer", "&:hover": { color: "text.primary" } }}
+                onClick={() => setTermsOpen(true)}
+              >
+                Terms
+              </Typography>
+              <Typography 
+                sx={{ color: "text.secondary", cursor: "pointer", "&:hover": { color: "text.primary" } }}
+                onClick={() => setPrivacyOpen(true)}
+              >
+                Privacy
+              </Typography>
+
+              <TermsDialog open={termsOpen} onClose={() => setTermsOpen(false)} />
+              <PrivacyDialog open={privacyOpen} onClose={() => setPrivacyOpen(false)} />
             </Stack>
           </Stack>
         </Container>
