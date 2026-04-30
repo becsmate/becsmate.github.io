@@ -60,6 +60,8 @@ test('renders app root', () => {
     );
   });
 
-  root.unmount();
+  act(() => {
+    root.unmount();
+  });
   container.remove();
 });
