@@ -1,220 +1,196 @@
-# becsmate.me - Personal Website
+# Smart Receipt & Wallet Manager
 
-A modern personal website built with Flask, React TypeScript, and Material-UI, fully containerized with Docker for easy development and deployment.
+A modern, enterprise-grade financial web application built with Flask, React TypeScript, and Material-UI, fully containerized with Docker for easy development and deployment. This system features a robust, fault-tolerant AI pipeline for receipt processing and secure shared wallets.
 
 ## 🚀 Tech Stack
 
-- **Backend**: Python 3.11, Flask 3.0
-- **Frontend**: React 18, TypeScript, Material-UI 5
+- **Frontend**: React 18, TypeScript, Material-UI 5, Axios, React Router DOM, Jest & React Testing Library
+- **Backend**: Python 3.10+, Flask, SQLAlchemy (PostgreSQL), PyJWT, Pytest
+- **AI & Cloud Services**: OCR.space, Groq API (Llama 3), Azure Computer Vision, Azure Form Recognizer, Azure Blob Storage
 - **Containerization**: Docker & Docker Compose
-- **Deployment**: Heroku (Container Stack)
-- **Domain**: becsmate.me (Namecheap)
+- **CI/CD & Deployment**: GitHub Actions, Heroku (Container Stack)
 
 ## 🏗️ Architecture
 
+```text
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   React Client  │    │  Flask Backend  │    │   PostgreSQL    │
+│   (Port 3000)   │◄──►│   (Port 5000)   │◄──►│    Database     │
+│   TypeScript    │    │     Python      │    │                 │
+└─────────────────┘    └────────┬────────┘    └─────────────────┘
+                                │
+          ┌─────────────────────┼─────────────────────┐
+          ▼                     ▼                     ▼
+  ┌───────────────┐     ┌───────────────┐     ┌───────────────┐
+  │  OCR.space /  │     │   Groq API    │     │  Azure Blob   │
+  │   Azure APIs  │     │   (Llama 3)   │     │   Storage     │
+  └───────────────┘     └───────────────┘     └───────────────┘
 ```
-┌─────────────────┐    ┌─────────────────┐
-│   React Client  │    │  Flask Backend  │
-│   (Port 3000)   │◄──►│   (Port 5000)   │
-│   TypeScript    │    │     Python      │
-│   Material-UI   │    │   REST API      │
-└─────────────────┘    └─────────────────┘
-         │                       │
-         └───────────────────────┘
-                   │
-            ┌─────────────┐
-            │   Docker    │
-            │  Container  │
-            └─────────────┘
-```
+
+## 🌟 Key Features
+
+- **Multi-Tier Fallback AI Pipeline**: Intelligent receipt data extraction that balances cost and accuracy by cascading through OCR.space (Engines 1 & 3), Azure Computer Vision, and finally Azure Form Recognizer, parsed seamlessly by Groq (Llama 3).
+- **Secure Authentication**: Stateless JWT-based authentication featuring Axios interceptors for automatic, silent background token rotation (refresh tokens) and centralized error handling.
+- **Shared Wallets & Permissions**: Create personal or group wallets with an invitation system, strictly managed by relational database constraints and backend middleware.
+- **High Test Coverage**: Comprehensive automated testing suite using `pytest` (with fixtures and mock API calls) for the backend and `Jest` + `RTL` (mocking Axios and AuthContext) for the frontend.
+- **Automated CI/CD**: Automated deployment pipeline using GitHub Actions triggered on push/merge to the `main` branch.
 
 ## 🛠️ Development Setup
 
 ### Prerequisites
 - Docker & Docker Compose
 - Node.js 18+ (for local development)
-- Python 3.11+ (for local development)
+- Python 3.10+ (for local development)
+
+### Environment Variables
+Create a `.env` file in the root directory and configure the following keys:
+
+| Variable | Description |
+|----------|-------------|
+| `FLASK_ENV` | `development` or `production` |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `JWT_SECRET_KEY` | Secret key for JWT signing |
+| `GROQ_API_KEY` | API key for Groq LLM parsing |
+| `OCR_API_KEY` | API key for OCR.space |
+| `AZURE_VISION_KEY` | Credentials for Azure Computer Vision |
+| `AZURE_FORM_RECOGNIZER_KEY` | Credentials for Azure Receipt API |
+| `AZURE_STORAGE_CONNECTION_STRING`| Connection string for Blob Storage (avatars) |
 
 ### Quick Start
 
-1. **Clone and setup**:
+1. **Clone the repository**:
    ```bash
-   git clone https://github.com/becsmate/becsmate.github.io.git
-   cd becsmate.github.io
-   ./scripts/setup.sh
+   git clone https://github.com/becsmate/smart-receipt-manager.git
+   cd smart-receipt-manager
    ```
 
-2. **Start development environment**:
+2. **Start development environment with Docker** (Spins up React, Flask, and PostgreSQL):
    ```bash
-   # Full stack with Docker (recommended)
-   npm run dev
-   
-   # Frontend only with hot reload
-   npm run dev:frontend
-   
-   # Local development (no Docker)
-   npm run local:dev
+   docker-compose up --build
    ```
 
-3. **Access your app**:
-   - Full app: http://localhost:5000
-   - Frontend dev: http://localhost:3000
-   - API endpoints: http://localhost:5000/api/*
+3. **Access the application**:
+   - Frontend: http://localhost:3000
+   - Backend API: http://localhost:5000/api
+   - pgAdmin/Database (if configured): http://localhost:5050
 
-### Available Scripts
-
-- `npm run dev` - Full stack Docker development
-- `npm run dev:frontend` - Frontend-only Docker development
-- `npm run prod` - Production-like Docker environment
-- `npm run local:dev` - Local development without Docker
-- `npm run build` - Build frontend for production
-- `npm run clean` - Clean build artifacts
-
-## 🐳 Docker
-
-### Development
+## 🐳 Docker Commands
 ```bash
 # Build and start all services
 docker-compose up --build
 
-# Start with frontend hot reload
-docker-compose --profile dev up
+# Run backend tests inside the container
+docker-compose exec backend pytest tests/ --cov
 
-# Production-like environment
-docker-compose --profile prod up
+# Run frontend tests inside the container
+docker-compose exec frontend npm test
 ```
 
-### Production Build
-```bash
-# Build production image
-docker build -t becsmate-site .
+## 🌐 Deployment (Heroku & GitHub Actions)
 
-# Run production container
-docker run -p 5000:5000 -e PORT=5000 becsmate-site
-```
+The application is deployed to Heroku using a containerized stack, fully automated via GitHub Actions.
 
-## 🌐 Deployment
-
-### Heroku (Current)
-
-The site uses Heroku's container stack with automatic deployments.
-
-1. **Set up Heroku app**:
-   ```bash
-   heroku create your-app-name
-   heroku stack:set container
-   heroku config:set FLASK_ENV=production
-   heroku config:set CORS_ORIGINS=https://becsmate.me,https://www.becsmate.me
-   ```
-
-2. **Test locally first**:
-   ```bash
-   ./scripts/test-heroku.sh
-   ```
-
-3. **Deploy with script**:
-   ```bash
-   ./scripts/deploy.sh
-   ```
-
-4. **Or deploy manually**:
-   ```bash
-   git add .
-   git commit -m "Deploy to Heroku"
-   git push heroku main
-   ```
-
-5. **Custom domain** (already configured):
-   ```bash
-   heroku domains:add becsmate.me
-   heroku domains:add www.becsmate.me
-   ```
-
-### Environment Variables
-
-| Variable | Development | Production | Description |
-|----------|-------------|------------|-------------|
-| `FLASK_ENV` | `development` | `production` | Flask environment |
-| `PORT` | `5000` | Set by Heroku | Server port |
-| `CORS_ORIGINS` | `http://localhost:3000` | `https://becsmate.me` | Allowed CORS origins |
+1. **GitHub Actions Workflow**: 
+   Any push to the `main` branch triggers the CI/CD pipeline, which runs the test suites and deploys the optimized build to Heroku.
 
 ## 📁 Project Structure
 
+```text
+├── client
+│   ├── Dockerfile.dev
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── public
+│   ├── src
+│   │   ├── App.test.tsx
+│   │   ├── App.tsx
+│   │   ├── components
+│   │   │   ├── dashboard
+│   │   │   │   ├── AddTransactionDialog.tsx
+│   │   │   │   ├── CategoryDonutChart.tsx
+│   │   │   │   ├── IncomeExpensesChart.tsx
+│   │   │   │   ├── QuickUploadCard.tsx
+│   │   │   │   ├── RecentTransactionsTable.tsx
+│   │   │   │   ├── SummaryCards.tsx
+│   │   │   │   ├── WalletInvitationPanel.tsx
+│   │   │   │   ├── WalletMembersPanel.tsx
+│   │   │   │   └── WalletsPanel.tsx
+│   │   │   ├── landing
+│   │   │   │   ├── Privacy.tsx
+│   │   │   │   └── Terms.tsx
+│   │   │   └── navigation
+│   │   │       ├── Avatar.tsx
+│   │   │       ├── Navigation.test.tsx
+│   │   │       └── Navigation.tsx
+│   │   ├── constants
+│   │   │   └── transactionCategories.ts
+│   │   ├── contexts
+│   │   │   └── AuthContext.tsx
+│   │   ├── index.css
+│   │   ├── index.tsx
+│   │   ├── pages
+│   │   │   ├── Dashboard_.tsx
+│   │   │   ├── Dashboard.tsx
+│   │   │   ├── LandingPage.tsx
+│   │   │   ├── Login.test.tsx
+│   │   │   ├── Login.tsx
+│   │   │   ├── OCRPage.tsx
+│   │   │   ├── Register.tsx
+│   │   │   ├── Settings.tsx
+│   │   │   ├── StatisticsPage.tsx
+│   │   │   └── WalletManagePage.tsx
+│   │   ├── react-app-env.d.ts
+│   │   ├── services
+│   │   │   ├── apiClient.ts
+│   │   │   ├── authService.test.ts
+│   │   │   ├── authService.ts
+│   │   │   ├── ocrService.ts
+│   │   │   ├── statisticsService.ts
+│   │   │   └── walletService.ts
+│   │   └── utils
+│   │       ├── avatar.ts
+│   │       ├── index.test.ts
+│   │       └── index.ts
+│   └── tsconfig.json
+├── docker-compose.yml
+├── Dockerfile
+├── README.md
+├── server
+│   ├── app.py
+│   ├── azure_services
+│   │   ├── __init__.py
+│   │   └── storage.py
+│   ├── config.py
+│   ├── Dockerfile.dev
+│   ├── extensions.py
+│   ├── models.py
+│   ├── ocr
+│   │   ├── __init__.py
+│   │   ├── azure_ocr.py
+│   │   ├── azure_receipt_service.py
+│   │   ├── groq_parser.py
+│   │   ├── ocr_service.py
+│   │   └── smart_receipt_service.py
+│   ├── pytest.ini
+│   ├── requirements.txt
+│   ├── routes
+│   │   ├── __init__.py
+│   │   ├── auth.py
+│   │   ├── ocr.py
+│   │   ├── profile_picture.py
+│   │   ├── spa.py
+│   │   ├── statistics.py
+│   │   ├── transactions.py
+│   │   └── wallets.py
+│   └── tests
+│       ├── conftest.py
+│       ├── test_auth.py
+│       ├── test_ocr.py
+│       ├── test_profile_picture.py
+│       ├── test_spa.py
+│       ├── test_statistics.py
+│       ├── test_transactions.py
+│       └── test_wallets.py
 ```
-becsmate.github.io/
-├── client/                 # React TypeScript frontend
-│   ├── public/            # Static assets
-│   ├── src/               # React components and logic
-│   └── package.json       # Frontend dependencies
-├── server/                # Flask backend
-│   ├── app.py            # Main Flask application
-│   └── __init__.py       # Python package init
-├── scripts/              # Development scripts
-│   └── setup.sh          # Development setup script
-├── deploy/               # Deployment configurations
-├── docker-compose.yml    # Docker Compose configuration
-├── Dockerfile           # Multi-stage Docker build
-├── heroku.yml          # Heroku container configuration
-├── requirements.txt    # Python dependencies
-├── package.json       # Root package.json for Heroku
-└── README.md         # This file
-```
 
-## 🔧 API Endpoints
-
-- `GET /api/health` - Health check
-- `GET /api/about` - Site information and tech stack
-- `GET /` - Serves React app (catch-all)
-
-## 🎨 Features
-
-- ✅ Responsive Material-UI design
-- ✅ Dark/Light theme toggle
-- ✅ Docker containerization
-- ✅ Hot reload in development
-- ✅ Production-optimized builds
-- ✅ Heroku deployment ready
-- ✅ Custom domain support
-- ✅ CORS configuration
-- ✅ TypeScript support
-- ✅ Modern React patterns
-
-## 🔄 Development Workflow
-
-1. Make changes to code
-2. Changes auto-reload in Docker development mode
-3. Test locally at http://localhost:5000
-4. Commit and push to trigger Heroku deployment
-5. Site automatically deploys to https://becsmate.me
-
-## 🐛 Troubleshooting
-
-### Common Issues
-
-1. **Port already in use**:
-   ```bash
-   docker-compose down
-   # or
-   lsof -ti:5000 | xargs kill -9
-   ```
-
-2. **Docker build issues**:
-   ```bash
-   docker system prune -a
-   docker-compose build --no-cache
-   ```
-
-3. **Frontend not loading**:
-   - Check if `client/build` directory exists
-   - Run `npm run build` to build frontend
-   - Verify API endpoints are working at `/api/health`
-
-## 📝 License
-
-This is a personal website. Feel free to use as inspiration for your own site!
-
-## 🤝 Contact
-
-- Website: [becsmate.me](https://becsmate.me)
-- GitHub: [@becsmate](https://github.com/becsmate)
-- Email: hello@becsmate.me
+This project was developed as a Computer Science BSc thesis at ELTE IK.
